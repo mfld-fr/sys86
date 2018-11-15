@@ -1,0 +1,37 @@
+
+How to save power ?
+
+- cannot power down as T0 and serial needed, but can power save
+- decrease main clock (impact timer T2 and serial port speed)
+- disable timer T1 or use it for timer @ 1 ms resolution
+- decrease rate of T2-T0 chain (T2 : 100 -> 5000 and T0 : 50000 -> 1000)
+- disable DMA controller clock
+- passive wait with HLT instruction
+
+
+CPU frequency scaler:
+
+- for power saving
+- idle routine with load measurement
+- main clock divisor chained to T2 and serial
+
+
+Some experiments:
+
+- serial x2 = baud x2 ?
+- if confirmed, speed up the load/dump
+
+
+New bootstrap with minimum setup for MON86:
+
+- io port setup
+- chip select setup
+- T2 and T0 setup
+- serial setup
+- serial buffering
+
+
+
+
+
+

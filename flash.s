@@ -61,7 +61,7 @@ _entry:
 	xor     di,di
 
 	mov     cx,#$800
-        mov     ax,#$FFFF
+	mov     ax,#$FFFF
 	cld
 	repe
 	scasw
@@ -83,7 +83,7 @@ _entry:
 	; check block write
 
 	xor     si,si
-	xor	di,di
+	xor     di,di
 	mov     cx,#$800
 	repe
 	cmpsw

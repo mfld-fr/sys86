@@ -1,4 +1,9 @@
+.project
+.cproject
+
+/cross
+
 *.o
-*.bin
 *.map
 
+sys86.bin

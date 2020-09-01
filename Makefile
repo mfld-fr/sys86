@@ -10,6 +10,10 @@ LDFLAGS = -T raw.ld
 EXE = sys86.bin
 
 OBJS= \
+  entry.o \
+  arch.o \
+  queue.o \
+  task.o \
   int-hand.o \
   int-proc.o \
   # end of list
@@ -27,7 +31,7 @@ clean:
 test: test-emu
 
 test-emu:
-	emu86 -w 0xf0000 -f sys86.bin -x 0xf000:0x0 &
+	emu86 -w 0x10000 -f sys86.bin -x 0x1000:0x0 &
 	sleep 1
-	pcat -t 1000 `cat emu86.pts` < ../test-sys86-in.txt > test-emu-out.txt
-	diff ../test-sys86-ref.txt test-emu-out.txt
+	pcat -t 1000 `cat emu86.pts` < test-sys86-in.txt > test-emu-out.txt
+	diff test-sys86-ref.txt test-emu-out.txt

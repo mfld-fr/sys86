@@ -1,4 +1,8 @@
 
+#define _ASSEMBLY
+
+#include "task.h"
+
 // Stack frame after interrupt entry
 // Dummy SP slot for PUSHA POPA optimisation
 
@@ -38,22 +42,6 @@
 #define vect_global 0xFF
 #define kern_ds (4*vect_global+2)
 
-// Task structure
-
-#define task_stack_size 256
-
-/*
-struct task {
-	reg_t sp;
-	word_t level;
-	word_t stack [task_stack_size];
-	};
-*/
-
-#define task_sp    0x00
-#define task_level 0x02
-#define task_stack 0x04
-
 // Interrupt C procedure
 
 /*
@@ -77,9 +65,9 @@ vect_init:
 
 	// System vector
 
-	mov     $4*vect_system,%bx
-	movw    $int_system,%es:(%bx)
-	mov     %cs,%es:2(%bx)
+	//mov     $4*vect_system,%bx
+	//movw    $int_system,%es:(%bx)
+	//mov     %cs,%es:2(%bx)
 
 	// Global vector
 
@@ -234,23 +222,27 @@ int_exit:
 
 task_switch:
 
-	push	%es
-	push	%bp
-	push	%si
-	push	%di
+	push    %bp
+	mov     %sp,%bp
+
+	push    %es
+	push    %si
+	push    %di
 
 	cli
-	mov	    4(%bp),%bx  // arg1
-	mov	    %sp,task_sp(%bx)
+	mov     4(%bp),%bx  // arg1
+	or      %bx,%bx
+	jz      1f
+	mov     %sp,task_sp(%bx)
 
-	mov     6(%bp),%bx  // arg2
-	mov	    task_sp(%bx),%sp
+1:	mov     6(%bp),%bx  // arg2
+	mov     task_sp(%bx),%sp
 	sti
 
 	pop     %di
 	pop     %si
-	pop     %bp
 	pop     %es
+	pop     %bp
 	ret
 
 //------------------------------------------------------------------------------
@@ -285,10 +277,11 @@ task_init_kern:
 	xor     %ax,%ax
 	stosw   // DI
 	stosw   // SI
-	stosw   // BP
 	mov     %ds,%ax
 	stosw   // ES
-	mov     6(%bx),%ax  // arg2
+	xor     %ax,%ax
+	stosw   // BP
+	mov     6(%bp),%ax  // arg2
 	stosw   // kernel IP
 
 	pop     %es

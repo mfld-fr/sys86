@@ -4,6 +4,7 @@
 /cross
 
 *.o
+*.bin
 *.map
 
-sys86.bin
+test-emu-out.txt

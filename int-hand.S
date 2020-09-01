@@ -33,6 +33,10 @@
 
 #define switch_size   2*0x5
 
+// Timer interrupt vector
+
+#define vect_timer 0x08
+
 // System call vector with kernel CS
 
 #define vect_system 0x80
@@ -42,12 +46,7 @@
 #define vect_global 0xFF
 #define kern_ds (4*vect_global+2)
 
-// Interrupt C procedure
-
-/*
-void int_proc (word_t int_num, void far * regs);
-*/
-
+//------------------------------------------------------------------------------
 
 	.code16
 
@@ -63,11 +62,19 @@ vect_init:
 	xor     %ax,%ax
 	mov     %ax,%es
 
+	// Timer vector
+
+	mov     $4*vect_timer,%bx
+	movw    $int_timer,%es:(%bx)
+	mov     %cs,%es:2(%bx)
+
 	// System vector
 
-	//mov     $4*vect_system,%bx
-	//movw    $int_system,%es:(%bx)
-	//mov     %cs,%es:2(%bx)
+	/*
+	mov     $4*vect_system,%bx
+	movw    $int_system,%es:(%bx)
+	mov     %cs,%es:2(%bx)
+	*/
 
 	// Global vector
 
@@ -80,23 +87,25 @@ vect_init:
 
 //------------------------------------------------------------------------------
 
-// Timer slot
+// Timer interrupt
+
+	.global int_timer
 
 int_timer:
 
 	call    int_hand
-	.word   0
+	.word   0x08
 
-// System interrupt (synchronous)
+// System call (synchronous)
 
+/*
 int_system:
 
 	call    int_hand
 	.word   0x80
+*/
 
 //------------------------------------------------------------------------------
-
-	.extern int_proc
 
 int_hand:
 
@@ -369,13 +378,3 @@ task_init_user:
 	ret
 
 //------------------------------------------------------------------------------
-
-	.bss
-
-	.global task_cur
-
-task_cur:
-	.word
-
-//------------------------------------------------------------------------------
-

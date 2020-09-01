@@ -4,33 +4,48 @@
 #include "task.h"
 #include "int.h"
 
-#define TASK_MAX 2
+// Array of tasks
+// Priority is array order
 
-static struct task * tasks [TASK_MAX];
+struct task * tasks [TASK_MAX];
+struct task * task_cur;
+
+static struct task task_idle;
 
 // Task scheduler
 // Priority is task array order
 
 void task_sched () {
 
-	struct task * n = NULL;
+	while (1) {
+		struct task * n = NULL;
 
-	for (int i = 0; i < TASK_MAX; i++) {
-		struct task * t = tasks [i];
-		if (t && t->stat == TASK_RUN) {
-			n = t;
-			break;
+		// TODO: disable interrupt
+
+		for (int i = 0; i < TASK_MAX; i++) {
+			struct task * t = tasks [i];
+			if (t && t->stat == TASK_RUN) {
+				n = t;
+				break;
+				}
 			}
-		}
 
-	if (n && n != task_cur) {
-		struct task * p = task_cur;
-		task_cur = n;
-		task_switch (p, n);
+		// Default to idle task
+
+		if (!n) n = &task_idle;
+
+		if (n && n != task_cur) {
+			struct task * p = task_cur;
+			task_cur = n;
+			task_switch (p, n);
+			}
+
+		break;
 		}
 	}
 
 // Test code
+
 
 static struct queue queue_0;
 
@@ -39,12 +54,25 @@ static struct task task_send;
 
 void main_recv () {
 	while (1) {
-		task_cur->stat = TASK_WAIT;
-		if (queue_full (&queue_0)) task_sched ();
+		byte_t c;
+
+		while (1) {
+			task_cur->stat = TASK_WAIT;
+			if (recv_char (&c)) break;
+			task_sched ();
+			}
 		task_cur->stat = TASK_RUN;
 
-		byte_t c;
-		recv_char (&c);
+		// As only one queue writer
+		// no need to loop on wait
+
+		while (1) {
+			task_cur->stat = TASK_WAIT;
+			if (!queue_full (&queue_0)) break;
+			task_sched ();
+			}
+		task_cur->stat = TASK_RUN;
+
 		queue_put (&queue_0, c);
 
 		task_send.stat = TASK_RUN;
@@ -54,23 +82,45 @@ void main_recv () {
 
 void main_send () {
 	while (1) {
-		task_cur->stat = TASK_WAIT;
-		if (queue_empty (&queue_0)) task_sched ();
+		// As only one queue reader
+		// no need to loop on wait
+
+		while (1) {
+			task_cur->stat = TASK_WAIT;
+			if (!queue_empty (&queue_0)) break;
+			task_sched ();
+			}
 		task_cur->stat = TASK_RUN;
 
 		byte_t c;
 		queue_get (&queue_0, &c);
-		send_char (c);
 
 		task_recv.stat = TASK_RUN;
 		task_sched ();
+
+		send_char (c);
 		}
+	}
+
+static void idle () {
+	while (1) {
+		halt ();
+		}
+	}
+
+void task_init () {
+	task_init_kern (&task_idle, idle);
+	task_recv.stat = TASK_RUN;
+
+	tasks [TASK_MAX - 1] = &task_idle;
 	}
 
 void main () {
 	vect_init ();
 
-	queue_init (&queue_0);
+	//queue_init (&queue_0);
+
+	task_init ();
 
 	task_init_kern (&task_recv, main_recv);
 	task_recv.stat = TASK_RUN;
@@ -78,11 +128,9 @@ void main () {
 	task_init_kern (&task_send, main_send);
 	task_send.stat = TASK_RUN;
 
-	// Emptying the queue first
+	tasks [0] = &task_recv;
+	tasks [1] = &task_send;
 
-	tasks [0] = &task_send;
-	tasks [1] = &task_recv;
-
-	task_cur = &task_send;
-	task_switch (NULL, &task_send);
+	task_cur = &task_recv;
+	task_switch (NULL, &task_recv);
 	}

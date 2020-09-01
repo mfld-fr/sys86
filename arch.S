@@ -75,7 +75,7 @@ arch_setup:
 
 //------------------------------------------------------------------------------
 
-// Read one character from serial
+// Peek one character from serial
 // Using Advantech tweaked BIOS
 
 	.global recv_char
@@ -84,28 +84,25 @@ recv_char:
 
 	push   %bp
 	mov    %sp,%bp
+
 	push   %bx
 	mov    4(%bp),%bx  // arg1 = char * c
 
-read_loop:
+	mov    $0x01,%ah   // peek key
+	int    $0x16       // BIOS keyboard service
+	jnz    1f          // got a key
 
-	mov    $0x10,%ah  // get extended key
-	int    $0x16      // BIOS keyboard service
-	or     %ah,%ah
-	jz     read_exit  // got a key
-
-	// Idle until next interrupt
-
-	hlt
-	jmp    read_loop
-
-read_exit:
-
-	mov    %al,(%bx)
-	pop    %bx
 	xor    %ax,%ax
+	jmp    2f
+
+1:	mov    %al,(%bx)
+	mov    $1,%ax
+
+2:	pop    %bx
 	pop    %bp
 	ret
+
+//------------------------------------------------------------------------------
 
 // Write one character to serial
 // Using Advantech tweaked BIOS
@@ -146,3 +143,13 @@ send_string:
 
 //------------------------------------------------------------------------------
 
+// Halt processor and wait interrupt
+
+	.global halt
+
+halt:
+
+	hlt
+	ret
+
+//------------------------------------------------------------------------------

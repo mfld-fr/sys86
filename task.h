@@ -6,9 +6,14 @@
 
 #define task_stack_size 256
 
+#define TASK_MAX 3
+
 #ifndef _ASSEMBLY
 
 // Task structure
+
+// TODO: move the stack out of the task object
+// to allow stack out the kernel data segment
 
 struct task {
 
@@ -23,6 +28,9 @@ struct task {
 	int stat;
 	};
 
+extern struct task * tasks [TASK_MAX];
+extern struct task * task_cur;
+
 #endif // !_ASSEMBLY
 
 #define task_sp    0x00
@@ -31,7 +39,6 @@ struct task {
 
 #ifndef _ASSEMBLY
 
-extern struct task * task_cur;
 
 void task_init_kern (struct task *, void * entry);
 

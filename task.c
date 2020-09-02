@@ -7,10 +7,11 @@
 // Array of tasks
 // Priority is array order
 
-struct task * tasks [TASK_MAX];
-struct task * task_cur;
+struct task_s * tasks [TASK_MAX];
+struct task_s * task_cur;
 
-static struct task task_idle;
+static struct task_s task_idle;
+static word_t stack_idle [STACK_SIZE];
 
 // Task scheduler
 // Priority is task array order
@@ -18,12 +19,12 @@ static struct task task_idle;
 void task_sched () {
 
 	while (1) {
-		struct task * n = NULL;
+		struct task_s * n = NULL;
 
 		// TODO: disable interrupt
 
 		for (int i = 0; i < TASK_MAX; i++) {
-			struct task * t = tasks [i];
+			struct task_s * t = tasks [i];
 			if (t && t->stat == TASK_RUN) {
 				n = t;
 				break;
@@ -35,7 +36,7 @@ void task_sched () {
 		if (!n) n = &task_idle;
 
 		if (n && n != task_cur) {
-			struct task * p = task_cur;
+			struct task_s * p = task_cur;
 			task_cur = n;
 			task_switch (p, n);
 			}
@@ -49,8 +50,11 @@ void task_sched () {
 
 static struct queue queue_0;
 
-static struct task task_recv;
-static struct task task_send;
+static struct task_s task_recv;
+static struct task_s task_send;
+
+static word_t stack_recv [STACK_SIZE];
+static word_t stack_send [STACK_SIZE];
 
 void main_recv () {
 	while (1) {
@@ -108,28 +112,25 @@ static void idle () {
 		}
 	}
 
-void task_init () {
-	task_init_kern (&task_idle, idle);
-	task_recv.stat = TASK_RUN;
+// TODO: allocate stack on heap
 
-	tasks [TASK_MAX - 1] = &task_idle;
-	}
+void task_init (int i, struct task_s * t, void * entry, word_t * stack, word_t size) {
+	t->stack = stack;
+	t->ssize = size;
+	task_init_kern (t, entry);
+	t->stat = TASK_RUN;
+	tasks [i] = t;
+}
 
 void main () {
 	vect_init ();
 
 	//queue_init (&queue_0);
 
-	task_init ();
+	task_init (TASK_MAX - 1, &task_idle, idle, stack_idle, STACK_SIZE);
 
-	task_init_kern (&task_recv, main_recv);
-	task_recv.stat = TASK_RUN;
-
-	task_init_kern (&task_send, main_send);
-	task_send.stat = TASK_RUN;
-
-	tasks [0] = &task_recv;
-	tasks [1] = &task_send;
+	task_init (0, &task_recv, main_recv, stack_recv, STACK_SIZE);
+	task_init (1, &task_send, main_send, stack_send, STACK_SIZE);
 
 	task_cur = &task_recv;
 	task_switch (NULL, &task_recv);

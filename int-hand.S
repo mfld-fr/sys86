@@ -2,26 +2,7 @@
 #define _ASSEMBLY
 
 #include "task.h"
-
-// Stack frame after interrupt entry
-// Dummy SP slot for PUSHA POPA optimisation
-
-#define stack_di     2*0x0
-#define stack_si     2*0x1
-#define stack_bp     2*0x2
-#define stack_sp     2*0x3
-#define stack_bx     2*0x4
-#define stack_dx     2*0x5
-#define stack_cx     2*0x6
-#define stack_ax     2*0x7
-#define stack_ds     2*0x8
-#define stack_es     2*0x9
-#define stack_num    2*0xA
-#define stack_ip     2*0xB
-#define stack_cs     2*0xC
-#define stack_fl     2*0xD
-
-#define stack_size   2*0xE
+#include "int.h"
 
 // Stack frame after task switch entry
 
@@ -31,7 +12,7 @@
 #define switch_es     2*0x3
 #define switch_ip     2*0x4
 
-#define switch_size   2*0x5
+#define SWITCH_SIZE   2*0x5
 
 // Timer interrupt vector
 
@@ -156,7 +137,8 @@ int_hand:
 	// Was in user mode
 	// Switch to kernel stack
 
-	lea     task_stack+task_stack_size(%bx),%sp
+	mov     task_stack(%bx),%sp
+	add     task_ssize(%bx),%sp
 	mov     %dx,%ss
 
 	// Push old top on new stack
@@ -168,7 +150,7 @@ int_hand:
 	// Get interrupt number
 
 	mov     %cx,%es
-	mov     %es:stack_num(%bp),%si
+	mov     %es:regs_num(%bp),%si
 	mov     %cs:(%si),%ax
 	mov     %dx,%es
 
@@ -274,8 +256,9 @@ task_init_kern:
 	// and branch to provided IP
 
 	push    %di
-	lea     task_stack+task_stack_size(%bx),%di
-	sub     $switch_size,%di
+	mov     task_stack(%bx),%di
+	add     task_ssize(%bx),%di
+	sub     $SWITCH_SIZE,%di
 	mov     %di,task_sp(%bx)
 
 	push    %es
@@ -334,7 +317,7 @@ task_init_user:
 	push    %di
 	mov     10(%bp),%di  // arg4
 	mov     12(%bp),%dx  // arg5
-	sub     $stack_size,%di
+	sub     $REGS_SIZE,%di
 	mov     %di,%si
 
 	push    %es

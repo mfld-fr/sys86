@@ -4,45 +4,47 @@
 #define TASK_RUN  1
 #define TASK_WAIT 2
 
-#define task_stack_size 256
+#define STACK_SIZE 256
 
 #define TASK_MAX 3
 
 #ifndef _ASSEMBLY
 
 // Task structure
+// TODO: stack size member to adjust per task
 
-// TODO: move the stack out of the task object
-// to allow stack out the kernel data segment
+struct task_s {
 
-struct task {
-
-	// Architecture specific
+	// Shared with assembly
 
 	reg_t sp;
 	word_t level;
-	word_t stack [task_stack_size];
+	word_t * stack;
+	word_t ssize;
 
-	// Generic
+	// C only
 
 	int stat;
 	};
 
-extern struct task * tasks [TASK_MAX];
-extern struct task * task_cur;
+extern struct task_s * tasks [TASK_MAX];
+extern struct task_s * task_cur;
 
 #endif // !_ASSEMBLY
+
+// Offsets in task_s structure
 
 #define task_sp    0x00
 #define task_level 0x02
 #define task_stack 0x04
+#define task_ssize 0x06
 
 #ifndef _ASSEMBLY
 
 
-void task_init_kern (struct task *, void * entry);
+void task_init_kern (struct task_s *, void * entry);
 
-void task_switch (struct task * prev, struct task * next);
+void task_switch (struct task_s * prev, struct task_s * next);
 
 void task_sched ();
 

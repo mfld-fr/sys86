@@ -2,12 +2,12 @@
 #include "task.h"
 #include "int.h"
 
-void int_proc (word_t int_num, void * regs) {
+void int_proc (word_t int_num, struct regs_s * regs, seg_t seg) {
 
 	// Horrible hack to wake up receive task
 	// in order to retry to peek key
 
-	struct task * t = tasks [0];
+	struct task_s * t = tasks [0];
 	t->stat = TASK_RUN;
 	task_sched ();
 	}

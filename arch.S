@@ -75,12 +75,12 @@ arch_setup:
 
 //------------------------------------------------------------------------------
 
-// Peek one character from serial
+// Peek one character from console
 // Using Advantech tweaked BIOS
 
-	.global recv_char
+	.global con_peek
 
-recv_char:
+con_peek:
 
 	push   %bp
 	mov    %sp,%bp
@@ -104,12 +104,12 @@ recv_char:
 
 //------------------------------------------------------------------------------
 
-// Write one character to serial
+// Send one character to console
 // Using Advantech tweaked BIOS
 
-	.global send_char
+	.global con_send
 
-send_char:
+con_send:
 
 	push   %bp
 	mov    %sp,%bp
@@ -120,30 +120,9 @@ send_char:
 	pop    %bp
 	ret
 
-// Write string to serial
-// Using Advantech tweaked BIOS
-
-	.global send_string
-
-send_string:
-
-	push   %bp
-	mov    %sp,%bp
-	push   %cx
-	mov    6(%bp),%cx  // arg2 = word_t : string length
-	push   %bp
-	mov    4(%bp),%bp  // arg1 = char * : string pointer (ES already set)
-	mov    $0x13,%ah   // write string
-	int    $0x10       // BIOS video service
-	pop    %bp
-	pop    %cx
-	xor    %ax,%ax
-	pop    %bp
-	ret
-
 //------------------------------------------------------------------------------
 
-// Halt processor and wait interrupt
+// Halt processor and wait for interrupt
 
 	.global halt
 

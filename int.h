@@ -46,7 +46,9 @@ struct regs_s {
 
 void vect_init ();
 
-// TODO: use far pointer
-void int_proc (word_t int_num, struct regs_s * regs, seg_t seg);
+void int_proc (word_t int_num);
 
-#endif  // _ASSEMBLY
+word_t int_save ();
+void int_back (word_t saved);
+
+#endif  // !_ASSEMBLY

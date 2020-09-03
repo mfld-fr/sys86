@@ -2,9 +2,7 @@
 
 #include "types.h"
 
-err_t recv_char (char_t * c);
-err_t send_char (char_t c);
-
-err_t send_string (char_t * s, word_t len);
+err_t con_peek (char_t * c);
+err_t con_send (char_t c);
 
 void halt (void);

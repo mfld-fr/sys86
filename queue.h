@@ -1,3 +1,6 @@
+// Lock-free byte queue
+// for single reader & writer
+
 #pragma once
 
 #include "types.h"
@@ -11,7 +14,9 @@ struct queue {
 	};
 
 void queue_init (struct queue * q);
-int queue_empty (struct queue * q);
+
+int queue_not_empty (struct queue * q);
+int queue_not_full (struct queue * q);
+
 int queue_get (struct queue * q, byte_t * c);
-int queue_full (struct queue * q);
 int queue_put (struct queue * q, byte_t c);

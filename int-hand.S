@@ -6,13 +6,14 @@
 
 // Stack frame after task switch entry
 
-#define switch_di     2*0x0
-#define switch_si     2*0x1
-#define switch_bp     2*0x2
-#define switch_es     2*0x3
-#define switch_ip     2*0x4
+#define switch_fl     2x0x0
+#define switch_di     2*0x1
+#define switch_si     2*0x2
+#define switch_bp     2*0x3
+#define switch_es     2*0x4
+#define switch_ip     2*0x5
 
-#define SWITCH_SIZE   2*0x5
+#define SWITCH_SIZE   2*0x6
 
 // Timer interrupt vector
 
@@ -90,7 +91,9 @@ int_system:
 
 int_hand:
 
-	sti
+	// Keep interrupt disabled
+	// until context fully saved
+	// and stack switch completed
 
 	// Save registers to stack
 
@@ -126,7 +129,6 @@ int_hand:
 	// =1: was in user mode
 	// >1: was in kernel mode
 
-	cli
 	mov     task_cur,%bx
 	mov     task_level(%bx),%ax
 	inc     %ax
@@ -137,17 +139,16 @@ int_hand:
 	// Was in user mode
 	// Switch to kernel stack
 
+	mov     %sp,USER_SP(%bx)
+	mov     %ss,USER_SS(%bx)
+
 	mov     task_stack(%bx),%sp
 	add     task_ssize(%bx),%sp
 	mov     %dx,%ss
 
-	// Push old top on new stack
+	// Get interrupt number
 
 1:	sti
-	push    %cx
-	push    %bp
-
-	// Get interrupt number
 
 	mov     %cx,%es
 	mov     %es:regs_num(%bp),%si
@@ -155,7 +156,6 @@ int_hand:
 	mov     %dx,%es
 
 	// Call interrupt procedure
-	// Old stack top already pushed
 
 	push    %ax
 	call    int_proc
@@ -163,20 +163,31 @@ int_hand:
 
 int_exit:
 
-	// Restore old stack top
-
-	pop     %bp
-	pop     %cx
-
-	// Decrement task level
-	// Switch back to old stack
+	// Keep interrupt disabled
+	// until stack switch completed
+	// and context fully restored
 
 	cli
+
+	// Decrement & check task level
+	// =0: back to user mode
+	// >0: still in kernel mode
+
 	mov     task_cur,%bx
-	decw    task_level(%bx)
-	mov     %bp,%sp
-	mov     %cx,%ss
-	sti
+	mov     task_level(%bx),%ax
+	dec     %ax
+	mov     %ax,task_level(%bx)
+	jnz     1f
+
+	// Back to user mode
+	// Switch to user stack
+
+	mov     USER_SP(%bx),%sp
+	mov     USER_SS(%bx),%ss
+
+	// Restore registers from stack
+
+1:
 
 #ifdef CPU_186
 	popa
@@ -200,7 +211,7 @@ int_exit:
 
 //------------------------------------------------------------------------------
 
-	.global	task_switch
+	.global task_switch
 
 // Task switch in kernel mode only
 // within the same CS DS SS
@@ -220,16 +231,23 @@ task_switch:
 	push    %si
 	push    %di
 
+	mov     4(%bp),%si  // arg1
+	mov     6(%bp),%di  // arg2
+
+	// Interrupt enabled flag is
+	// part of the switched context
+	// Disable during stack switch
+
+	pushf
 	cli
-	mov     4(%bp),%bx  // arg1
-	or      %bx,%bx
+
+	or      %si,%si
 	jz      1f
-	mov     %sp,task_sp(%bx)
+	mov     %sp,KERN_SP(%si)
 
-1:	mov     6(%bp),%bx  // arg2
-	mov     task_sp(%bx),%sp
-	sti
+1:	mov     KERN_SP(%di),%sp
 
+	popf
 	pop     %di
 	pop     %si
 	pop     %es
@@ -259,13 +277,16 @@ task_init_kern:
 	mov     task_stack(%bx),%di
 	add     task_ssize(%bx),%di
 	sub     $SWITCH_SIZE,%di
-	mov     %di,task_sp(%bx)
+	mov     %di,KERN_SP(%bx)
 
 	push    %es
 	mov     %ss,%ax
 	mov     %ax,%es
 
 	cld
+	pushf
+	pop     %ax
+	stosw   // FL
 	xor     %ax,%ax
 	stosw   // DI
 	stosw   // SI
@@ -341,23 +362,50 @@ task_init_user:
 	pop     %ax
 	stosw   // user FL
 
-	// Push user top on kernel stack
-
-	mov     %ss,%ax
-	mov     %ax,%es
-	mov     task_sp(%bx),%di
-	sub     $2*2,%di
-	mov     %di,task_sp(%bx)
-
-	mov     %si,%ax
-	stosw   // user SP
-	mov     %dx,%ax
-	stosw   // user SS
-
-	pop     %di
-	pop     %si
 	pop     %es
+	pop     %di
+
+	// Save user stack top in task
+
+	mov     %si,USER_SP(%bx)
+	mov     %dx,USER_SS(%bx)
+
+	pop     %si
 	pop     %bp
+	ret
+
+//------------------------------------------------------------------------------
+
+	.global int_save
+
+// Save interrupt enabled flag then disable it
+
+int_save:
+
+	pushf
+	pop     %ax
+	and     $0x0200,%ax
+	cli
+	ret
+
+//------------------------------------------------------------------------------
+
+	.global int_back
+
+// Back to saved interrupt enable flag
+
+// arg1: flag
+
+int_back:
+
+	mov     %sp,%bx
+	mov     2(%bx),%ax  // arg1
+	pushf
+	pop     %dx
+	and     $0xFEFF,%dx
+	or      %ax,%dx
+	push    %dx
+	popf
 	ret
 
 //------------------------------------------------------------------------------

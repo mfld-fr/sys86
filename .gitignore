@@ -1,5 +1,6 @@
 .project
 .cproject
+.settings
 
 /cross
 
@@ -7,4 +8,5 @@
 *.bin
 *.map
 
+emu86.pts
 test-emu-out.txt

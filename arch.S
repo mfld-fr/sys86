@@ -7,21 +7,17 @@
 #define io_timer1_mode  0xFF5E
 #define io_port0_data   0xFF74
 
-// Interrupt vectors
-
-#define vect_tick       0x1C
-
 	.code16
 
 	.text
 
 //------------------------------------------------------------------------------
 
-// Tick interrupt
-// Called by the BIOS @ 1 Hz
-// Used to quiet the hardware watchdog
+// Quiet the hardware watchdog
 
-int_tick:
+	.global watchdog
+
+watchdog:
 
 	push   %ax
 	push   %dx
@@ -52,21 +48,6 @@ arch_setup:
 	and     $0x7FFF,%ax  // disable timer bit
 	or      $0x4000,%ax  // unlock enable bit
 	out     %ax,%dx
-
-	// Insert tick handler @ 1 Hz
-
-	push   %ds
-	xor    %ax,%ax
-	mov    %ax,%ds
-
-	mov    $vect_tick*4,%bx
-	mov    $int_tick,%ax
-	cli
-	mov    %ax,(%bx)
-	mov    %cs,2(%bx)
-	sti
-
-	pop    %ds
 
 	pop    %dx
 	pop    %bx

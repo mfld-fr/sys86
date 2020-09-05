@@ -4,29 +4,18 @@
 #include "task.h"
 #include "int.h"
 
-// Stack frame after task switch entry
-
-#define switch_fl     2x0x0
-#define switch_di     2*0x1
-#define switch_si     2*0x2
-#define switch_bp     2*0x3
-#define switch_es     2*0x4
-#define switch_ip     2*0x5
-
-#define SWITCH_SIZE   2*0x6
-
-// Timer interrupt vector
+// Hardware interrupt vectors
 
 #define vect_timer 0x08
+#define vect_serial 0x14
 
 // System call vector with kernel CS
 
-#define vect_system 0x80
+//#define vect_system 0x80
 
 // Global vector with kernel DS
 
 #define vect_global 0xFF
-#define kern_ds (4*vect_global+2)
 
 //------------------------------------------------------------------------------
 
@@ -43,11 +32,18 @@ vect_init:
 	push    %es
 	xor     %ax,%ax
 	mov     %ax,%es
+	cli
 
 	// Timer vector
 
 	mov     $4*vect_timer,%bx
 	movw    $int_timer,%es:(%bx)
+	mov     %cs,%es:2(%bx)
+
+	// Serial vector
+
+	mov     $4*vect_serial,%bx
+	movw    $int_serial,%es:(%bx)
 	mov     %cs,%es:2(%bx)
 
 	// System vector
@@ -61,9 +57,10 @@ vect_init:
 	// Global vector
 
 	mov     $4*vect_global,%bx
-	movw    $0,%es:(%bx)
+	mov     %ax,%es:(%bx)
 	mov     %ds,%es:2(%bx)
 
+	sti
 	pop     %es
 	ret
 
@@ -77,6 +74,14 @@ int_timer:
 
 	call    int_hand
 	.word   0x08
+
+// Serial interrupt
+
+int_serial:
+
+	call    int_hand
+	.word   0x14
+
 
 // System call (synchronous)
 
@@ -95,7 +100,8 @@ int_hand:
 	// until context fully saved
 	// and stack switch completed
 
-	// Save registers to stack
+	// IP CS FL already pushed
+	// Push remaining registers
 
 	push    %es
 	push    %ds
@@ -117,7 +123,7 @@ int_hand:
 
 	xor     %dx,%dx
 	mov     %dx,%ds
-	mov     kern_ds,%dx
+	mov     4*vect_global+2,%dx
 	mov     %dx,%ds
 
 	// Save old stack top
@@ -129,21 +135,21 @@ int_hand:
 	// =1: was in user mode
 	// >1: was in kernel mode
 
-	mov     task_cur,%bx
-	mov     task_level(%bx),%ax
+	mov     task_cur,%si
+	mov     task_level(%si),%ax
 	inc     %ax
-	mov     %ax,task_level(%bx)
+	mov     %ax,task_level(%si)
 	cmp     $1,%ax
 	jne     1f
 
 	// Was in user mode
 	// Switch to kernel stack
 
-	mov     %sp,USER_SP(%bx)
-	mov     %ss,USER_SS(%bx)
+	mov     %bp,USER_SP(%si)
+	mov     %cx,USER_SS(%si)
 
-	mov     task_stack(%bx),%sp
-	add     task_ssize(%bx),%sp
+	mov     task_stack(%si),%sp
+	add     task_ssize(%si),%sp
 	mov     %dx,%ss
 
 	// Get interrupt number
@@ -151,20 +157,21 @@ int_hand:
 1:	sti
 
 	mov     %cx,%es
-	mov     %es:regs_num(%bp),%si
-	mov     %cs:(%si),%ax
+	mov     %es:regs_num(%bp),%bx
+	mov     %cs:(%bx),%ax
 	mov     %dx,%es
 
 	// Call interrupt procedure
+	// with far pointer to saved context
 
+	push    %cx
+	push    %bp
 	push    %ax
 	call    int_proc
-	add     $2,%sp
-
-int_exit:
+	add     $2*3,%sp
 
 	// Keep interrupt disabled
-	// until stack switch completed
+	// until all stack switches completed
 	// and context fully restored
 
 	cli
@@ -173,17 +180,48 @@ int_exit:
 	// =0: back to user mode
 	// >0: still in kernel mode
 
-	mov     task_cur,%bx
-	mov     task_level(%bx),%ax
+	//mov     task_cur,%si
+	mov     task_level(%si),%ax
 	dec     %ax
-	mov     %ax,task_level(%bx)
-	jnz     1f
+	mov     %ax,task_level(%si)
+	jnz     int_exit
 
 	// Back to user mode
 	// Switch to user stack
 
-	mov     USER_SP(%bx),%sp
-	mov     USER_SS(%bx),%ss
+	mov     USER_SP(%si),%sp
+	mov     USER_SS(%si),%ss
+
+	// Now the interrupt stack is empty
+	// and context on top of interrupted stack
+	// so task switching can occur
+
+int_exit:
+
+	// May save previous stack top
+
+	mov     task_prev,%bx
+	or      %bx,%bx
+	jz      1f
+
+	mov     %sp,TOP_SP(%bx)
+	mov     %ss,TOP_SS(%bx)
+
+	xor     %bx,%bx
+	mov     %bx,task_prev
+
+	// May switch to next stack top
+
+1:	mov     task_next,%bx
+	or      %bx,%bx
+	jz      1f
+
+	mov     TOP_SP(%bx),%sp
+	mov     TOP_SS(%bx),%ss
+
+	mov     %bx,task_cur
+	xor     %bx,%bx
+	mov     %bx,task_next
 
 	// Restore registers from stack
 
@@ -207,170 +245,144 @@ int_exit:
 
 	add    $2,%sp  // skip int_num *
 
+	// Interrupt return for remaining IP CS FL
+
 	iret
 
 //------------------------------------------------------------------------------
 
 	.global task_switch
 
-// Task switch in kernel mode only
-// within the same CS DS SS
+// Switch task out of interrupt
 
-// Synchronous call so AX BX CX DX not saved
-// as scratch registers for GCC-IA16
-
-// arg1: task prev *
-// arg2: task next *
+// Push context as for interrupt entry
+// then jump to interrupt exit
 
 task_switch:
 
-	push    %bp
-	mov     %sp,%bp
+	// Caller IP already pushed
+	// Bad order for FL CS IP
+	// Will rearrange later
+
+	push    %cs
+	pushf
+
+	// Push other registers
+
+	sub     $2,%sp  // skip int_num *
 
 	push    %es
+	push    %ds
+
+#ifdef CPU_186
+	pusha
+#else
+	push    %ax
+	push    %cx
+	push    %dx
+	push    %bx
+	sub     $2,%sp  // skip dummy SP
+	push    %bp
 	push    %si
 	push    %di
+#endif
 
-	mov     4(%bp),%si  // arg1
-	mov     6(%bp),%di  // arg2
+	// Rearrange to IP CS FL
 
-	// Interrupt enabled flag is
-	// part of the switched context
-	// Disable during stack switch
-
-	pushf
-	cli
-
-	or      %si,%si
-	jz      1f
-	mov     %sp,KERN_SP(%si)
-
-1:	mov     KERN_SP(%di),%sp
-
-	popf
-	pop     %di
-	pop     %si
-	pop     %es
-	pop     %bp
-	ret
-
-//------------------------------------------------------------------------------
-
-	.global task_init_kern
-
-// arg1: task *
-// arg2: kernel IP
-
-task_init_kern:
-
-	push    %bp
 	mov     %sp,%bp
+	mov     regs_ip(%bp),%ax
+	xchg    %ax,regs_fl(%bp)
+	mov     %ax,regs_ip(%bp)
 
-	mov     4(%bp),%bx  // arg1
-	movw    $1,task_level(%bx)
+	// Now jump to interrupt exit
 
-	// Setup kernel stack
-	// to exit from task_switch()
-	// and branch to provided IP
-
-	push    %di
-	mov     task_stack(%bx),%di
-	add     task_ssize(%bx),%di
-	sub     $SWITCH_SIZE,%di
-	mov     %di,KERN_SP(%bx)
-
-	push    %es
-	mov     %ss,%ax
-	mov     %ax,%es
-
-	cld
-	pushf
-	pop     %ax
-	stosw   // FL
-	xor     %ax,%ax
-	stosw   // DI
-	stosw   // SI
-	mov     %ds,%ax
-	stosw   // ES
-	xor     %ax,%ax
-	stosw   // BP
-	mov     6(%bp),%ax  // arg2
-	stosw   // kernel IP
-
-	pop     %es
-	pop     %di
-	pop     %bp
-	ret
+	jmp     int_exit
 
 //------------------------------------------------------------------------------
 
-	.global task_init_user
+	.global stack_init_far
 
-//  User in small memory model SS=DS
+// Setup far stack with task initial context
+// Tiny or small memory model SS=DS=ES
 
 //  +4: arg1: task *
-//  +6: arg2: user IP
-//  +8: arg3: user CS
-// +10: arg4: user SP
-// +12: arg5: user SS
+//  +6: arg2: task IP
+//  +8: arg3: task CS
+// +10: arg4: task SP
+// +12: arg5: task SS
 
-task_init_user:
+stack_init_far:
 
 	push    %bp
 	mov     %sp,%bp
 
 	mov     4(%bp),%bx  // arg1
 
-	// Setup kernel stack
-	// to exit from task_switch()
-	// and branch to int_exit
-
-	mov     $int_exit,%ax
-	push    %ax
-	push    %bx
-	call    task_init_kern
-	add     $2*2,%sp
-
-	// Setup user stack
-	// to exit from int_hand
-
-	push    %si
 	push    %di
 	mov     10(%bp),%di  // arg4
 	mov     12(%bp),%dx  // arg5
 	sub     $REGS_SIZE,%di
+
+	push    %si
 	mov     %di,%si
 
 	push    %es
 	mov     %dx,%es
 
-	// cld by task_init_term()
+	cld
 	xor     %ax,%ax
 	mov     $8,%cx  // 8 general registers
 	rep
 	stosw   // DI SI BP dummy-SP BX DX CX AX
 	mov     %dx,%ax
-	stosw   // user DS
-	stosw   // user ES
+	stosw   // DS
+	stosw   // ES
 	xor     %ax,%ax
 	stosw   // int num *
 	mov     6(%bp),%ax  // arg2
-	stosw   // user IP
+	stosw   // IP
 	mov     8(%bp),%ax  // arg3
-	stosw   // user CS
-	pushf
-	pop     %ax
-	stosw   // user FL
+	stosw   // CS
+	mov     $0x200,%ax  // STI
+	stosw   // FL
 
 	pop     %es
 	pop     %di
 
-	// Save user stack top in task
+	// Save stack top in task
 
-	mov     %si,USER_SP(%bx)
-	mov     %dx,USER_SS(%bx)
+	mov     %si,TOP_SP(%bx)
+	mov     %dx,TOP_SS(%bx)
 
 	pop     %si
+	pop     %bp
+	ret
+
+//------------------------------------------------------------------------------
+
+	.global stack_init_near
+
+// Setup near stack with task initial context
+// Tiny or small memory model SS=DS=ES
+
+// +4: arg1: task *
+// +6: arg2: task IP
+// +8: arg3: task SP
+
+stack_init_near:
+
+	push    %bp
+	mov     %sp,%bp
+
+	push    %ss
+	push    8(%bp)  // arg3 = SP
+	push    %cs
+	push    6(%bp)  // arg2 = IP
+	push    4(%bp)  // arg1 = task *
+
+	call    stack_init_far
+	add     $2*5,%sp
+
 	pop     %bp
 	ret
 

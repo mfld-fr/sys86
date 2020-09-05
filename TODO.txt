@@ -1,3 +1,11 @@
+Short-term
+
+- Add in() & out() functions
+- Add EOI function
+- Add watchdog quiet
+- Add serial interrupt
+- Restore interrupt stack ?
+- Test on SBC
 
 How to save power ?
 
@@ -8,19 +16,16 @@ How to save power ?
 - disable DMA controller clock
 - passive wait with HLT instruction
 
-
 CPU frequency scaler:
 
 - for power saving
 - idle routine with load measurement
 - main clock divisor chained to T2 and serial
 
-
 Some experiments:
 
 - serial x2 = baud x2 ?
 - if confirmed, speed up the load/dump
-
 
 New bootstrap with minimum setup for MON86:
 
@@ -29,9 +34,4 @@ New bootstrap with minimum setup for MON86:
 - T2 and T0 setup
 - serial setup
 - serial buffering
-
-
-
-
-
 

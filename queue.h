@@ -7,16 +7,16 @@
 
 #define QUEUE_SIZE 16
  
-struct queue {
+struct queue_s {
 	word_t wr;  // next write
 	word_t rd;  // next read
 	byte_t buf [QUEUE_SIZE];
 	};
 
-void queue_init (struct queue * q);
+void queue_init (struct queue_s * q);
 
-int queue_not_empty (struct queue * q);
-int queue_not_full (struct queue * q);
+int queue_not_empty (struct queue_s * q);
+int queue_not_full (struct queue_s * q);
 
-int queue_get (struct queue * q, byte_t * c);
-int queue_put (struct queue * q, byte_t c);
+int queue_get (struct queue_s * q, byte_t * c);
+int queue_put (struct queue_s * q, byte_t c);

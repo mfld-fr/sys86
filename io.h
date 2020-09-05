@@ -1,24 +1,34 @@
-; Register offsets
+#pragma once
 
-io_print_com    EQU $031A
+// I/O registers
 
-io_timer0_mode  EQU $FF56
-io_timer1_mode  EQU $FF5E
-io_timer2_mode  EQU $FF66
+#define io_print_com    0x031A
 
-io_port0_data   EQU $FF74
+#define IO_INT_END         0xFF22
 
-io_port1_mode   EQU $FF76
-io_port1_dir    EQU $FF78
-io_port1_data   EQU $FF7A
+#define io_timer0_mode  0xFF56
+#define io_timer1_mode  0xFF5E
+#define io_timer2_mode  0xFF66
 
+#define io_port0_data   0xFF74
 
-; PIO masks
+#define io_port1_mode   0xFF76
+#define io_port1_dir    0xFF78
+#define io_port1_data   0xFF7A
 
-port0_mask      EQU $FE33
-port1_mask      EQU $67F2
+#define IO_SERIAL_CONTROL  0xFF80
+#define IO_SERIAL_STATUS   0xFF82
+#define IO_SERIAL_TDATA    0xFF84
+#define IO_SERIAL_RDATA    0xFF86
 
-led1_mask       EQU $0002
-serial_mask     EQU $6700
+// PIO masks
 
+#define io_port0_mask         0xFE33
+#define io_port1_mask         0x67F2
 
+#define io_port1_led1_mask    0x0002
+#define io_port1_serial_mask  0x6700
+
+// Serial registers
+
+#define SERIAL_STATUS_RDR  0x0010

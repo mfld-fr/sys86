@@ -9,14 +9,18 @@
 // Priority is array order
 
 struct task_s * tasks [TASK_MAX];
+
+struct task_s * task_prev;
 struct task_s * task_cur;
+struct task_s * task_next;
 
-// TODO: atomics
-int sched_need = 0;
-int sched_lock = 0;
+// TODO: atomics ?
+int sched_need;
+int sched_lock;
+int int_level;
 
-static struct task_s task_idle;
-static word_t stack_idle [STACK_SIZE];
+struct task_s task_idle;
+word_t stack_idle [STACK_SIZE];
 
 // Task scheduler
 // Priority is task array order
@@ -27,6 +31,8 @@ void schedule ()
 
 	while (1) {
 		// No scheduling if locked
+		// Used by interrupt procedure
+		// to forbid scheduling in nested interrupt
 
 		if (sched_lock) break;
 		sched_need = 0;
@@ -47,9 +53,11 @@ void schedule ()
 		if (!n) n = &task_idle;
 
 		if (n != task_cur) {
-			struct task_s * p = task_cur;
-			task_cur = n;
-			task_switch (p, n);
+			task_prev = task_cur;
+			task_next = n;
+
+			// No task switch until interrupt stack is empty
+			if (!int_level) task_switch ();
 			}
 
 		break;
@@ -64,7 +72,7 @@ void event_wait (int event, cond_f test, void * param)
 	{
 	word_t flag;
 
-	// FIXME: no need to loop if unique waiter for event
+	// TODO: no need to loop if unique waiter for event
 
 	while (1) {
 		// Atomic condition test & prepare to sleep
@@ -107,26 +115,29 @@ void task_event (int event)
 
 // Test code
 
-static struct queue queue_0;
+struct queue_s queue_0;
 
-static struct task_s task_recv;
-static struct task_s task_send;
+struct task_s task_recv;
+struct task_s task_send;
 
-static word_t stack_recv [STACK_SIZE];
-static word_t stack_send [STACK_SIZE];
+word_t stack_recv [STACK_SIZE];
+word_t stack_send [STACK_SIZE];
 
 void main_recv ()
 	{
 	while (1) {
-		byte_t c;
+		// Read from console
+		// Blocking operation
 
-		// Wait for console input
+		byte_t c;
+		//serial_read (&c);
+
+		// TEST: wait for console input
 		// Atomic condition test & go to sleep
 
 		word_t flag;
-
 		while (1) {
-			word_t flag = int_save ();
+			flag = int_save ();
 			if (con_peek (&c)) break;
 			task_cur->wait = EVENT_CONSOLE_IN;
 			task_cur->stat = TASK_WAIT;
@@ -160,18 +171,19 @@ void main_send ()
 		}
 	}
 
-static void idle ()
+void idle ()
 	{
 	while (1) halt ();
 	}
 
 // TODO: allocate stack on heap
 
-void task_init (int i, struct task_s * t, void * entry, word_t * stack, word_t size)
+void task_init_near (int i, struct task_s * t, void * entry, word_t * stack, word_t size)
 	{
+	t->level = 1;
 	t->stack = stack;
 	t->ssize = size;
-	task_init_kern (t, entry);
+	stack_init_near (t, entry, stack + size);
 	t->stat = TASK_RUN;
 	tasks [i] = t;
 	}
@@ -182,11 +194,11 @@ void main ()
 
 	//queue_init (&queue_0);
 
-	task_init (TASK_MAX - 1, &task_idle, idle, stack_idle, STACK_SIZE);
+	task_init_near (TASK_MAX - 1, &task_idle, idle, stack_idle, STACK_SIZE);
 
-	task_init (0, &task_recv, main_recv, stack_recv, STACK_SIZE);
-	task_init (1, &task_send, main_send, stack_send, STACK_SIZE);
+	task_init_near (0, &task_recv, main_recv, stack_recv, STACK_SIZE);
+	task_init_near (1, &task_send, main_send, stack_send, STACK_SIZE);
 
-	task_cur = &task_recv;
-	task_switch (NULL, &task_recv);
+	task_next = &task_recv;
+	task_switch ();
 	}

@@ -44,11 +44,15 @@ struct regs_s {
 	reg_t fl;
 	};
 
+extern int int_level;
+
 void vect_init ();
 
 void int_proc (word_t int_num);
 
 word_t int_save ();
 void int_back (word_t saved);
+
+int serial_read (byte_t * c);
 
 #endif  // !_ASSEMBLY

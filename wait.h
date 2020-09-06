@@ -6,7 +6,7 @@ enum event_e {
 	EVENT_NONE = 0,
 	EVENT_QUEUE_NOT_FULL,
 	EVENT_QUEUE_NOT_EMPTY,
-	EVENT_CONSOLE_IN
+	EVENT_SERIAL_IN
 	};
 
 void task_event (int event);

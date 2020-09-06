@@ -50,9 +50,11 @@ void vect_init ();
 
 void int_proc (word_t int_num);
 
-word_t int_save ();
+void int_enable (void);
+word_t int_save (void);
 void int_back (word_t saved);
 
 int serial_read (byte_t * c);
+void serial_send (byte_t c);
 
 #endif  // !_ASSEMBLY

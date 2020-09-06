@@ -1,9 +1,7 @@
 Short-term
 
-- Add in() & out() functions
-- Add EOI function
 - Add watchdog quiet
-- Add serial interrupt
+- Add serial TX interrupt
 - Restore interrupt stack ?
 - Test on SBC
 

@@ -4,6 +4,7 @@
 #include "task.h"
 #include "int.h"
 #include "wait.h"
+#include "io.h"
 
 // Array of tasks
 // Priority is array order
@@ -130,22 +131,7 @@ void main_recv ()
 		// Blocking operation
 
 		byte_t c;
-		//serial_read (&c);
-
-		// TEST: wait for console input
-		// Atomic condition test & go to sleep
-
-		word_t flag;
-		while (1) {
-			flag = int_save ();
-			if (con_peek (&c)) break;
-			task_cur->wait = EVENT_CONSOLE_IN;
-			task_cur->stat = TASK_WAIT;
-			int_back (flag);
-			schedule ();
-			}
-
-		int_back (flag);
+		serial_read (&c);
 
 		// Wait for space in queue
 
@@ -167,7 +153,7 @@ void main_send ()
 		queue_get (&queue_0, &c);
 		task_event (EVENT_QUEUE_NOT_FULL);  // not more full
 
-		con_send (c);
+		serial_send (c);
 		}
 	}
 
@@ -191,6 +177,7 @@ void task_init_near (int i, struct task_s * t, void * entry, word_t * stack, wor
 void main ()
 	{
 	vect_init ();
+	outw (IO_SERIAL_CONTROL, SERIAL_CONTROL_RIE);
 
 	//queue_init (&queue_0);
 

@@ -4,7 +4,7 @@
 
 #define io_print_com    0x031A
 
-#define IO_INT_END         0xFF22
+#define IO_INT_EOI         0xFF22
 
 #define io_timer0_mode  0xFF56
 #define io_timer1_mode  0xFF5E
@@ -31,4 +31,7 @@
 
 // Serial registers
 
-#define SERIAL_STATUS_RDR  0x0010
+#define SERIAL_CONTROL_RIE  0x0400  // receive interrupt enable
+
+#define SERIAL_STATUS_TDR   0x0020  // transmit data ready
+#define SERIAL_STATUS_RDR   0x0010  // receive data ready

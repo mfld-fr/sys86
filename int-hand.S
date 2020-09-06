@@ -388,6 +388,15 @@ stack_init_near:
 
 //------------------------------------------------------------------------------
 
+	.global int_enable
+
+int_enable:
+
+	sti
+	ret
+
+//------------------------------------------------------------------------------
+
 	.global int_save
 
 // Save interrupt enabled flag then disable it

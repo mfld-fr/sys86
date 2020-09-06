@@ -2,7 +2,9 @@
 
 #include "types.h"
 
-err_t con_peek (char_t * c);
-err_t con_send (char_t c);
+void watchdog (void);
 
 void halt (void);
+
+word_t inw (word_t p);
+void outw (word_t p, word_t w);

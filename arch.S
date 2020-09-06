@@ -55,52 +55,6 @@ arch_setup:
 	ret
 
 //------------------------------------------------------------------------------
-
-// Peek one character from console
-// Using Advantech tweaked BIOS
-
-	.global con_peek
-
-con_peek:
-
-	push   %bp
-	mov    %sp,%bp
-
-	push   %bx
-	mov    4(%bp),%bx  // arg1 = char * c
-
-	mov    $0x01,%ah   // peek key
-	int    $0x16       // BIOS keyboard service
-	jnz    1f          // got a key
-
-	xor    %ax,%ax
-	jmp    2f
-
-1:	mov    %al,(%bx)
-	mov    $1,%ax
-
-2:	pop    %bx
-	pop    %bp
-	ret
-
-//------------------------------------------------------------------------------
-
-// Send one character to console
-// Using Advantech tweaked BIOS
-
-	.global con_send
-
-con_send:
-
-	push   %bp
-	mov    %sp,%bp
-	mov    4(%bp),%ax  // GCC-IA16 pushes char_t as word
-	mov    $0x0A,%ah   // write character
-	int    $0x10       // BIOS video service
-	xor    %ax,%ax
-	pop    %bp
-	ret
-
 //------------------------------------------------------------------------------
 
 // Halt processor and wait for interrupt
@@ -110,6 +64,29 @@ con_send:
 halt:
 
 	hlt
+	ret
+
+//------------------------------------------------------------------------------
+
+// I/O helpers
+
+	.global inw
+
+inw:
+
+	mov     %sp,%bx
+	mov     2(%bx),%dx
+	in      %dx,%ax
+	ret
+
+	.global outw
+
+outw:
+
+	mov     %sp,%bx
+	mov     2(%bx),%dx
+	mov     4(%bx),%ax
+	out     %ax,%dx
 	ret
 
 //------------------------------------------------------------------------------

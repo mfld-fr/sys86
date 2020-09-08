@@ -1,7 +1,6 @@
 #include "types.h"
-#include "task.h"
 #include "int.h"
-#include "wait.h"
+#include "task.h"
 #include "io.h"
 #include "timer.h"
 #include "serial.h"

@@ -3,7 +3,6 @@
 #include "arch.h"
 #include "int.h"
 #include "task.h"
-#include "wait.h"
 
 // Array of tasks
 // Priority is array order
@@ -65,9 +64,8 @@ void schedule (void)
 	}
 
 // Wait for event occurrence
-// TODO: rename to task_event
 
-void event_wait (int event, cond_f test, void * param)
+void task_wait (void * object, cond_f test)
 	{
 	word_t flag;
 
@@ -77,12 +75,13 @@ void event_wait (int event, cond_f test, void * param)
 		// Atomic condition test & prepare to sleep
 
 		flag = int_save ();
-		if (test (param)) break;
-		task_cur->wait = event;
+		if (test (object)) break;
+		task_cur->wait = object;
 		task_cur->stat = TASK_WAIT;
 		int_back (flag);
 
-		// Can sleep now
+		// Interrupt enabled for a short time
+		// to give a chance before sleeping
 
 		schedule ();
 		}
@@ -94,14 +93,14 @@ void event_wait (int event, cond_f test, void * param)
 // TODO: no need to reschedule
 // if waking up lower prioritized than current
 
-void task_event (int event)
+void task_event (void * object)
 	{
 	word_t flags = int_save ();
 
 	for (int i = 0; i < TASK_MAX; i++) {
 		struct task_s * t = tasks [i];
-		if (t && (t->stat == TASK_WAIT) && (t->wait == event)) {
-			t->wait = EVENT_NONE;
+		if (t && (t->stat == TASK_WAIT) && (t->wait == object)) {
+			t->wait = NULL;
 			t->stat = TASK_RUN;
 			sched_need++;
 			}

@@ -1,11 +1,8 @@
 // SYS86
 
-// TODO: merge task.h / wait.h
-
 #include "arch.h"
 #include "int.h"
 #include "task.h"
-#include "wait.h"
 #include "queue.h"
 #include "serial.h"
 
@@ -30,10 +27,10 @@ void main_recv ()
 
 		// Wait for space in queue
 
-		event_wait (EVENT_QUEUE_NOT_FULL, (cond_f) queue_not_full, &queue_0);
+		task_wait (&queue_0, (cond_f) queue_not_full);
 
 		queue_put (&queue_0, c);
-		task_event (EVENT_QUEUE_NOT_EMPTY);  // not more empty
+		task_event (&queue_0);  // not more empty
 		}
 	}
 
@@ -42,11 +39,11 @@ void main_send ()
 	while (1) {
 		// Wait for data in queue
 
-		event_wait (EVENT_QUEUE_NOT_EMPTY, (cond_f) queue_not_empty, &queue_0);
+		task_wait (&queue_0, (cond_f) queue_not_empty);
 
 		byte_t c;
 		queue_get (&queue_0, &c);
-		task_event (EVENT_QUEUE_NOT_FULL);  // not more full
+		task_event (&queue_0);  // not more full
 
 		serial_send (c);
 		}

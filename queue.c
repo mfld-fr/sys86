@@ -14,6 +14,7 @@ int queue_not_empty (struct queue_s * q) {
 	}
 
 int queue_get (struct queue_s * q, byte_t * c) {
+	// TODO: not needed if already signaled as not empty
 	if (!queue_not_empty (q)) return 1;
 	*c = q->buf [q->rd];
 	q->rd = (q->rd + 1) % QUEUE_SIZE;
@@ -26,6 +27,7 @@ int queue_not_full (struct queue_s * q) {
 	}
 
 int queue_put (struct queue_s * q, byte_t c) {
+	// TODO: not needed if alread signaled as not full
 	if (!queue_not_full (q)) return 1;
 	q->buf [q->wr] = c;
 	q->wr = (q->wr + 1) % QUEUE_SIZE;

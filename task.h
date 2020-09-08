@@ -39,7 +39,7 @@ struct task_s {
 	// C only
 
 	int stat;
-	int wait;
+	void * wait;  // object waited for
 	};
 
 extern struct task_s * tasks [TASK_MAX];
@@ -55,12 +55,17 @@ extern int sched_need;
 
 void stack_init_near (struct task_s *, void * entry, word_t * stack);
 
+void task_switch (void);
+
 // From C code
 
 void task_init_near (int i, struct task_s * t, void * entry, word_t * stack, word_t size);
 
-void task_switch (void);
 void schedule (void);
+
+typedef int (* cond_f) (void * object);
+void task_wait (void * object, cond_f test);
+void task_event (void * object);
 
 void task_init (void);
 

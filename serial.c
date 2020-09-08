@@ -1,7 +1,7 @@
 // SYS86
 
 #include "io.h"
-#include "wait.h"
+#include "task.h"
 #include "queue.h"
 #include "serial.h"
 
@@ -29,13 +29,13 @@ void serial_proc (void)
 	if (stat & SERIAL_STATUS_RDR) {
 		word_t c = inw (IO_SERIAL_RDATA);
 		if (!queue_put (&serial_in, (byte_t) c))
-			task_event (EVENT_SERIAL_IN);
+			task_event (&serial_in);
 		}
 	}
 
 int serial_read (byte_t * c)
 	{
-	event_wait (EVENT_SERIAL_IN, (cond_f) queue_not_empty, &serial_in);
+	task_wait (&serial_in, (cond_f) queue_not_empty);
 	queue_get (&serial_in, c);
 	return 1;
 	}

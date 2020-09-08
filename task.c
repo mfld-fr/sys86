@@ -1,3 +1,5 @@
+// EMU86 project
+// Task management
 
 #include "types.h"
 #include "arch.h"
@@ -16,8 +18,19 @@ struct task_s * task_next;
 int sched_need;
 int sched_lock;
 
+//------------------------------------------------------------------------------
+
+// Idle task
+
 static struct task_s task_idle;
 static word_t stack_idle [STACK_SIZE];
+
+static void idle (void)
+	{
+	while (1) halt ();
+	}
+
+//------------------------------------------------------------------------------
 
 // Task scheduler
 // Priority is task array order
@@ -109,11 +122,6 @@ void task_event (void * object)
 	if (sched_need) schedule ();
 
 	int_back (flags);
-	}
-
-static void idle (void)
-	{
-	while (1) halt ();
 	}
 
 // TODO: allocate stack on heap to minimize BSS section

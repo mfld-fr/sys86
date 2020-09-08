@@ -1,9 +1,10 @@
-// SYS86
+// SYS86 project
+// R8810 serial port
 
-#include "io.h"
 #include "task.h"
 #include "queue.h"
 #include "serial.h"
+#include "arch.h"
 
 // R8810 serial port I/O
 
@@ -14,13 +15,17 @@
 
 // R8810 serial registers
 
-#define SERIAL_CONTROL_RIE  0x0400  // receive interrupt enable
+#define SERIAL_CONTROL_RIE 0x0400  // receive interrupt enable
 
-#define SERIAL_STATUS_TDR   0x0020  // transmit data ready
-#define SERIAL_STATUS_RDR   0x0010  // receive data ready
+#define SERIAL_STATUS_TDR  0x0020  // transmit data ready
+#define SERIAL_STATUS_RDR  0x0010  // receive data ready
+
+// Generic I/O queues
 
 static struct queue_s serial_in;
 //static struct queue_s serial_out;
+
+// Interrupt procedure
 
 void serial_proc (void)
 	{
@@ -32,6 +37,8 @@ void serial_proc (void)
 			task_event (&serial_in);
 		}
 	}
+
+// TODO: move to generic serial
 
 int serial_read (byte_t * c)
 	{

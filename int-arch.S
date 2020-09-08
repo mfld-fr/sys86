@@ -1,23 +1,10 @@
+// SYS86 project
+// Architecture specific interrupt handling
 
 #define _ASSEMBLY
 
 #include "task.h"
 #include "int.h"
-
-// Hardware interrupt vectors
-
-#define vect_timer 0x08
-#define vect_serial 0x14
-
-// System call vector with kernel CS
-
-//#define vect_system 0x80
-
-// Global vector with kernel DS
-
-#define vect_global 0xFF
-
-//------------------------------------------------------------------------------
 
 	.code16
 
@@ -36,27 +23,27 @@ vect_init:
 
 	// Timer vector
 
-	mov     $4*vect_timer,%bx
-	movw    $int_timer,%es:(%bx)
+	mov     $4*VECT_TIMER0,%bx
+	movw    $int_timer0,%es:(%bx)
 	mov     %cs,%es:2(%bx)
 
 	// Serial vector
 
-	mov     $4*vect_serial,%bx
+	mov     $4*VECT_SERIAL,%bx
 	movw    $int_serial,%es:(%bx)
 	mov     %cs,%es:2(%bx)
 
 	// System vector
 
 	/*
-	mov     $4*vect_system,%bx
+	mov     $4*VECT_SYSTEM,%bx
 	movw    $int_system,%es:(%bx)
 	mov     %cs,%es:2(%bx)
 	*/
 
 	// Global vector
 
-	mov     $4*vect_global,%bx
+	mov     $4*VECT_GLOBAL,%bx
 	mov     %ax,%es:(%bx)
 	mov     %ds,%es:2(%bx)
 
@@ -68,28 +55,31 @@ vect_init:
 
 // Timer interrupt
 
-	.global int_timer
+	.global int_timer0
 
-int_timer:
+int_timer0:
 
 	call    int_hand
-	.word   0x08
+	.word   VECT_TIMER0
 
 // Serial interrupt
+
+	.global int_serial
 
 int_serial:
 
 	call    int_hand
-	.word   0x14
-
+	.word   VECT_SERIAL
 
 // System call (synchronous)
 
 /*
+	.global int_system
+
 int_system:
 
 	call    int_hand
-	.word   0x80
+	.word   VECT_SYSTEM
 */
 
 //------------------------------------------------------------------------------
@@ -123,7 +113,7 @@ int_hand:
 
 	xor     %dx,%dx
 	mov     %dx,%ds
-	mov     4*vect_global+2,%dx
+	mov     4*VECT_GLOBAL+2,%dx
 	mov     %dx,%ds
 
 	// Save old stack top

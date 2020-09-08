@@ -1,4 +1,5 @@
-# Makefile for target
+# SYS86 project
+# Global Makefile
 
 CC = ia16-elf-gcc
 # ES only for segment please!
@@ -15,12 +16,14 @@ OBJS= \
   entry.o \
   arch.o \
   task.o \
-  int-hand.o \
+  int-dev.o \
+  int-arch.o \
   int-proc.o \
   timer.o \
   queue.o \
   serial.o \
-  main.o
+  system.o \
+  main.o \
   # end of list
 
 .PHONY : all clean test

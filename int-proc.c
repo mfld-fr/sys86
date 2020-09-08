@@ -1,19 +1,20 @@
+// SYS86 project
+// Generic interrupt handling
+
 #include "types.h"
 #include "int.h"
 #include "task.h"
-#include "io.h"
 #include "timer.h"
 #include "serial.h"
 
+// Asynchronous interrupt level
+// Used to forbid task switch in nested interrupt
+
 int int_level;
 
-// TODO: move to int-dev.c
-void int_end (word_t num)
-	{
-	outw (IO_INT_EOI, num);
-	}
+// Interrupt procedure
 
-void int_proc (word_t num)
+void int_proc (word_t vect)
 	{
 	word_t flags;
 
@@ -24,17 +25,17 @@ void int_proc (word_t num)
 	sched_lock++;
 	int_back (flags);
 
-	switch (num) {
-		case 0x08:  // timer 0 VECT_TIMER
-		timer_proc ();
+	switch (vect) {
+		case VECT_TIMER0:
+		timer0_proc ();
 		break;
 
-		case 0x14:  // serial VECT_SERIAL
+		case VECT_SERIAL:
 		serial_proc ();
 		break;
 		}
 
-	int_end (num);
+	int_end (vect);
 
 	flags = int_save ();
 	sched_lock--;

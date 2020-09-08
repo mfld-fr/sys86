@@ -1,22 +1,24 @@
-// SYS86
+// SYS86 project
+// Main program
 
 #include "arch.h"
 #include "int.h"
 #include "task.h"
+#include "timer.h"
 #include "queue.h"
 #include "serial.h"
 
 // Test code
 
-struct queue_s queue_0;
+static struct queue_s queue_0;
 
-struct task_s task_recv;
-struct task_s task_send;
+static struct task_s task_recv;
+static struct task_s task_send;
 
-word_t stack_recv [STACK_SIZE];
-word_t stack_send [STACK_SIZE];
+static word_t stack_recv [STACK_SIZE];
+static word_t stack_send [STACK_SIZE];
 
-void main_recv ()
+static void main_recv (void)
 	{
 	while (1) {
 		// Read from console
@@ -34,7 +36,7 @@ void main_recv ()
 		}
 	}
 
-void main_send ()
+static void main_send (void)
 	{
 	while (1) {
 		// Wait for data in queue
@@ -52,15 +54,23 @@ void main_send ()
 void main ()
 	{
 	// Interrupt disabled on entry
+	// System initialization
+	// TODO: move to system.c
 
-	vect_init ();
-	serial_init ();
-	task_init ();
+	vect_init ();    // interrupt vectors
+	//int_init ();   // interrupt controller
+	timer_init ();   // timer device
+	serial_init ();  // serial port
+	task_init ();    // tasks & scheduler
 
 	//queue_init (&queue_0);
 
 	task_init_near (0, &task_recv, main_recv, stack_recv, STACK_SIZE);
 	task_init_near (1, &task_send, main_send, stack_send, STACK_SIZE);
+
+	// Switch to first task
+	// Initial stack not needed any more
+	// Interrupt enabled by default in task
 
 	task_next = &task_recv;
 	task_switch ();

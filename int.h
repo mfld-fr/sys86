@@ -1,6 +1,24 @@
+// SYS86 project
+// Interrupt handling
+
 #pragma once
 
 #include "types.h"
+
+// Hardware interrupt vectors
+// R8810 specific
+// TODO: move to int-dev.h
+
+#define VECT_TIMER0 0x08
+#define VECT_SERIAL 0x14
+
+// System call vector with kernel CS
+
+#define VECT_SYSTEM 0x80
+
+// Global vector with kernel DS
+
+#define VECT_GLOBAL 0xFF
 
 // Stack frame after interrupt entry
 // Dummy SP slot for PUSHA POPA optimization
@@ -49,6 +67,7 @@ extern int int_level;
 void vect_init ();
 
 void int_proc (word_t int_num);
+void int_end (word_t vect);
 
 void int_enable (void);
 word_t int_save (void);

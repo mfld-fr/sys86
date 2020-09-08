@@ -1,59 +1,11 @@
 //------------------------------------------------------------------------------
-// SYS86
+// SYS86 project
+// Miscellaneous architecture specifics
 //------------------------------------------------------------------------------
-
-// Register offsets
-
-#define io_timer1_mode  0xFF5E
-#define io_port0_data   0xFF74
 
 	.code16
 
 	.text
-
-//------------------------------------------------------------------------------
-
-// Quiet the hardware watchdog
-
-	.global watchdog
-
-watchdog:
-
-	push   %ax
-	push   %dx
-	mov    $io_port0_data,%dx
-	in     %dx,%ax
-	xor    $1,%ax
-	out    %ax,%dx
-	pop    %dx
-	pop    %ax
-	iret
-
-//------------------------------------------------------------------------------
-
-// Architecture setup
-// TODO: move to system.S as system_init()
-
-	.global arch_setup
-
-arch_setup:
-
-	push   %ax
-	push   %bx
-	push   %dx
-
-	// Disable timer @ 1000 Hz
-
-	mov     $io_timer1_mode,%dx
-	in      %dx,%ax
-	and     $0x7FFF,%ax  // disable timer bit
-	or      $0x4000,%ax  // unlock enable bit
-	out     %ax,%dx
-
-	pop    %dx
-	pop    %bx
-	pop    %ax
-	ret
 
 //------------------------------------------------------------------------------
 
@@ -69,7 +21,6 @@ halt:
 //------------------------------------------------------------------------------
 
 // I/O helpers
-// TODO: move to io.S
 
 	.global inw
 

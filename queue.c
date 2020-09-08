@@ -1,5 +1,5 @@
-// Lock-free byte queue
-// for single reader & writer
+// SYS86 project
+// Lock-free byte queue for single reader / single writer
 
 #include "queue.h"
 

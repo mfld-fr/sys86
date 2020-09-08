@@ -1,9 +1,13 @@
+// SYS86 project
+// Main entry point
 
 	.code16
 
 	.text
 
 	.global entry
+
+//------------------------------------------------------------------------------
 
 entry:
 	// Disable interrupt until complete initialization
@@ -37,9 +41,13 @@ entry:
 
 	jmp    main
 
+//------------------------------------------------------------------------------
+
 	.bss
 
 	.global bss_begin
 
 bss_begin:
 	.word 0
+
+//------------------------------------------------------------------------------

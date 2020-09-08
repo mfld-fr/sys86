@@ -1,5 +1,7 @@
 #pragma once
 
+#include "types.h"
+
 #define TASK_DOWN 0
 #define TASK_RUN  1
 #define TASK_WAIT 2
@@ -49,9 +51,17 @@ extern struct task_s * task_next;
 extern int sched_lock;
 extern int sched_need;
 
+// From assembly
+
 void stack_init_near (struct task_s *, void * entry, word_t * stack);
 
-void task_switch ();
-void schedule ();
+// From C code
+
+void task_init_near (int i, struct task_s * t, void * entry, word_t * stack, word_t size);
+
+void task_switch (void);
+void schedule (void);
+
+void task_init (void);
 
 #endif // !_ASSEMBLY

@@ -1,10 +1,9 @@
 
+#include "types.h"
 #include "arch.h"
-#include "queue.h"
-#include "task.h"
 #include "int.h"
+#include "task.h"
 #include "wait.h"
-#include "io.h"
 
 // Array of tasks
 // Priority is array order
@@ -15,18 +14,16 @@ struct task_s * task_prev;
 struct task_s * task_cur;
 struct task_s * task_next;
 
-// TODO: atomics ?
 int sched_need;
 int sched_lock;
-int int_level;
 
-struct task_s task_idle;
-word_t stack_idle [STACK_SIZE];
+static struct task_s task_idle;
+static word_t stack_idle [STACK_SIZE];
 
 // Task scheduler
 // Priority is task array order
 
-void schedule ()
+void schedule (void)
 	{
 	word_t flags = int_save ();
 
@@ -68,6 +65,7 @@ void schedule ()
 	}
 
 // Wait for event occurrence
+// TODO: rename to task_event
 
 void event_wait (int event, cond_f test, void * param)
 	{
@@ -114,55 +112,12 @@ void task_event (int event)
 	int_back (flags);
 	}
 
-// Test code
-
-struct queue_s queue_0;
-
-struct task_s task_recv;
-struct task_s task_send;
-
-word_t stack_recv [STACK_SIZE];
-word_t stack_send [STACK_SIZE];
-
-void main_recv ()
-	{
-	while (1) {
-		// Read from console
-		// Blocking operation
-
-		byte_t c;
-		serial_read (&c);
-
-		// Wait for space in queue
-
-		event_wait (EVENT_QUEUE_NOT_FULL, (cond_f) queue_not_full, &queue_0);
-
-		queue_put (&queue_0, c);
-		task_event (EVENT_QUEUE_NOT_EMPTY);  // not more empty
-		}
-	}
-
-void main_send ()
-	{
-	while (1) {
-		// Wait for data in queue
-
-		event_wait (EVENT_QUEUE_NOT_EMPTY, (cond_f) queue_not_empty, &queue_0);
-
-		byte_t c;
-		queue_get (&queue_0, &c);
-		task_event (EVENT_QUEUE_NOT_FULL);  // not more full
-
-		serial_send (c);
-		}
-	}
-
-void idle ()
+static void idle (void)
 	{
 	while (1) halt ();
 	}
 
-// TODO: allocate stack on heap
+// TODO: allocate stack on heap to minimize BSS section
 
 void task_init_near (int i, struct task_s * t, void * entry, word_t * stack, word_t size)
 	{
@@ -174,18 +129,7 @@ void task_init_near (int i, struct task_s * t, void * entry, word_t * stack, wor
 	tasks [i] = t;
 	}
 
-void main ()
+void task_init (void)
 	{
-	vect_init ();
-	outw (IO_SERIAL_CONTROL, SERIAL_CONTROL_RIE);
-
-	//queue_init (&queue_0);
-
 	task_init_near (TASK_MAX - 1, &task_idle, idle, stack_idle, STACK_SIZE);
-
-	task_init_near (0, &task_recv, main_recv, stack_recv, STACK_SIZE);
-	task_init_near (1, &task_send, main_send, stack_send, STACK_SIZE);
-
-	task_next = &task_recv;
-	task_switch ();
 	}

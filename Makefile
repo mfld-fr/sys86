@@ -14,10 +14,13 @@ EXE = sys86.bin
 OBJS= \
   entry.o \
   arch.o \
-  queue.o \
   task.o \
   int-hand.o \
   int-proc.o \
+  timer.o \
+  queue.o \
+  serial.o \
+  main.o
   # end of list
 
 .PHONY : all clean test
@@ -33,7 +36,7 @@ clean:
 test: test-emu
 
 test-emu:
-	echo "WARNING: requires local emu86-sys !"
+	echo "*** WARNING : requires local emu86-sys ***"
 	../emu86/emu86 -w 0x10000 -f sys86.bin -x 0x1000:0x0 &
 	sleep 1
 	../emu86/pcat -t 1000 -d 10 `cat emu86.pts` < test-sys86-in.txt > test-emu-out.txt

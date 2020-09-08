@@ -1,5 +1,7 @@
 #pragma once
 
+#include "types.h"
+
 // I/O registers
 
 #define io_print_com    0x031A
@@ -16,11 +18,6 @@
 #define io_port1_dir    0xFF78
 #define io_port1_data   0xFF7A
 
-#define IO_SERIAL_CONTROL  0xFF80
-#define IO_SERIAL_STATUS   0xFF82
-#define IO_SERIAL_TDATA    0xFF84
-#define IO_SERIAL_RDATA    0xFF86
-
 // PIO masks
 
 #define io_port0_mask         0xFE33
@@ -29,9 +26,11 @@
 #define io_port1_led1_mask    0x0002
 #define io_port1_serial_mask  0x6700
 
-// Serial registers
+#ifndef _ASSEMBLY
 
-#define SERIAL_CONTROL_RIE  0x0400  // receive interrupt enable
+word_t inw (word_t p);
+void outw (word_t p, word_t w);
 
-#define SERIAL_STATUS_TDR   0x0020  // transmit data ready
-#define SERIAL_STATUS_RDR   0x0010  // receive data ready
+#endif // !_ASSEMBLY
+
+

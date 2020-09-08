@@ -1,9 +1,12 @@
-Short-term
+Check TODO tag in source.
 
-- Add watchdog quiet
-- Add serial TX interrupt
-- Restore interrupt stack ?
-- Test on SBC
+Otherwise:
+
+- test on SBC
+- add serial TX interrupt (really needed ?)
+- add timer interrupt (EMU86 timer device needed)
+- restore interrupt stack ?
+- monitor as first task ?
 
 How to save power ?
 
@@ -31,5 +34,4 @@ New bootstrap with minimum setup for MON86:
 - chip select setup
 - T2 and T0 setup
 - serial setup
-- serial buffering
 

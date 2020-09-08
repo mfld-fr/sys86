@@ -3,42 +3,12 @@
 #include "int.h"
 #include "wait.h"
 #include "io.h"
-#include "queue.h"
-#include "arch.h"
+#include "timer.h"
+#include "serial.h"
 
-struct queue_s serial_in;
-//struct queue_s serial_out;
+int int_level;
 
-void timer_proc (void)
-	{
-	// TODO: rewrite in C
-	watchdog ();
-	}
-
-void serial_proc (void)
-	{
-	word_t stat = inw (IO_SERIAL_STATUS);
-
-	if (stat & SERIAL_STATUS_RDR) {
-		word_t c = inw (IO_SERIAL_RDATA);
-		if (!queue_put (&serial_in, (byte_t) c))
-			task_event (EVENT_SERIAL_IN);
-		}
-	}
-
-int serial_read (byte_t * c)
-	{
-	event_wait (EVENT_SERIAL_IN, (cond_f) queue_not_empty, &serial_in);
-	queue_get (&serial_in, c);
-	return 1;
-	}
-
-void serial_send (byte_t c)
-	{
-	while (!(inw (IO_SERIAL_STATUS) & SERIAL_STATUS_TDR));
-	outw (IO_SERIAL_TDATA, (word_t) c);
-	}
-
+// TODO: move to int-dev.c
 void int_end (word_t num)
 	{
 	outw (IO_INT_EOI, num);
@@ -56,11 +26,11 @@ void int_proc (word_t num)
 	int_back (flags);
 
 	switch (num) {
-		case 0x08:  // timer 0
+		case 0x08:  // timer 0 VECT_TIMER
 		timer_proc ();
 		break;
 
-		case 0x14:  // serial
+		case 0x14:  // serial VECT_SERIAL
 		serial_proc ();
 		break;
 		}

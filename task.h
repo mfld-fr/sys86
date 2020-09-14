@@ -11,7 +11,7 @@
 
 #define STACK_SIZE 256
 
-#define TASK_MAX 3
+#define TASK_MAX 2
 
 // Offsets in task_s structure
 

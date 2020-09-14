@@ -5,6 +5,7 @@
 #include "queue.h"
 #include "serial.h"
 #include "arch.h"
+#include "timer.h"
 
 // R8810 serial port I/O
 
@@ -33,12 +34,11 @@ void serial_proc (void)
 
 	if (stat & SERIAL_STATUS_RDR) {
 		word_t c = inw (IO_SERIAL_RDATA);
+		time_sample (1);
 		if (!queue_put (&serial_in, (byte_t) c))
 			task_event (&serial_in);
 		}
 	}
-
-// TODO: move to generic serial
 
 int serial_read (byte_t * c)
 	{

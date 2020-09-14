@@ -6,17 +6,30 @@
 #include "timer.h"
 #include "system.h"
 
-#define IO_TIMER0_MODE 0xFF56
-#define IO_TIMER1_MODE 0xFF5E
-#define IO_TIMER2_MODE 0xFF66
-
 // Interrupt procedure
 
 void timer0_proc (void)
 	{
-	// TODO: rewrite in C
 	watchdog ();
+	led_blink ();
 	}
+
+// Time sampling
+// Use the T2 timer @ 5 MHz
+
+word_t time_samples [SAMPLE_MAX];
+
+void time_sample (word_t index)
+	{
+	time_samples [index] = inw (IO_TIMER2_COUNT);
+	}
+
+word_t time_diff (word_t begin, word_t end)
+	{
+	return (time_samples [end] - time_samples [begin]);
+	}
+
+// Timer initialization
 
 void timer_init (void)
 	{
@@ -26,4 +39,10 @@ void timer_init (void)
 	t1m &= 0x7FFF;  // disable timer bit
 	t1m |= 0x4000;  // unlock enable bit
 	outw (IO_TIMER1_MODE, t1m);
+
+	// T0 timer @ 1 Hz
+	// T2 timer @ 1 KHz
+
+	outw (IO_TIMER0_MAX, 1000);
+	outw (IO_TIMER2_MAX, 5000);
 	}

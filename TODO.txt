@@ -12,8 +12,6 @@ How to save power ?
 
 - cannot power down as T0 and serial needed, but can power save
 - decrease main clock (impact timer T2 and serial port speed)
-- disable timer T1 or use it for timer @ 1 ms resolution
-- decrease rate of T2-T0 chain (T2 : 100 -> 5000 and T0 : 50000 -> 1000)
 - disable DMA controller clock
 - passive wait with HLT instruction
 

@@ -7,47 +7,46 @@
 #include "timer.h"
 #include "queue.h"
 #include "serial.h"
+#include "lib.h"
 
 // Test code
 
-static struct queue_s queue_0;
+static struct task_s task_echo;
+static word_t stack_echo [STACK_SIZE];
 
-static struct task_s task_recv;
-static struct task_s task_send;
+static void send_diff (word_t begin, word_t end)
+	{
+	word_t diff = time_diff (begin, end);
 
-static word_t stack_recv [STACK_SIZE];
-static word_t stack_send [STACK_SIZE];
+	char_t str [4];
+	byte_t len;
+	word_to_hex (diff, str, &len);
 
-static void main_recv (void)
+	for (int s = 0; s < len; s++)
+		serial_send (str [s]);
+
+	}
+
+static void main_echo (void)
 	{
 	while (1) {
-		// Read from console
+		// Read from serial port
 		// Blocking operation
 
 		byte_t c;
 		serial_read (&c);
 
-		// Wait for space in queue
-
-		task_wait (&queue_0, (cond_f) queue_not_full);
-
-		queue_put (&queue_0, c);
-		task_event (&queue_0);  // not more empty
-		}
-	}
-
-static void main_send (void)
-	{
-	while (1) {
-		// Wait for data in queue
-
-		task_wait (&queue_0, (cond_f) queue_not_empty);
-
-		byte_t c;
-		queue_get (&queue_0, &c);
-		task_event (&queue_0);  // not more full
+		// Echo to serial port
 
 		serial_send (c);
+
+		// Send time samples
+
+		send_diff (0, 1);
+		serial_send (' ');
+		send_diff (1, 2);
+		serial_send (13);
+		serial_send (10);
 		}
 	}
 
@@ -61,17 +60,16 @@ void main ()
 	//int_init ();   // interrupt controller
 	timer_init ();   // timer device
 	serial_init ();  // serial port
-	task_init ();    // tasks & scheduler
+	task_init ();    // task manager
 
 	//queue_init (&queue_0);
 
-	task_init_near (0, &task_recv, main_recv, stack_recv, STACK_SIZE);
-	task_init_near (1, &task_send, main_send, stack_send, STACK_SIZE);
+	task_init_near (0, &task_echo, main_echo, stack_echo, STACK_SIZE);
 
 	// Switch to first task
 	// Initial stack not needed any more
 	// Interrupt enabled by default in task
 
-	task_next = &task_recv;
+	task_next = &task_echo;
 	task_switch ();
 	}

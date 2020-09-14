@@ -6,6 +6,8 @@
 #include "task.h"
 #include "int.h"
 
+#include "sample.S"
+
 	.code16
 
 	.text
@@ -67,6 +69,8 @@ int_timer0:
 	.global int_serial
 
 int_serial:
+
+	time_sample 0
 
 	call    int_hand
 	.word   VECT_SERIAL
@@ -236,6 +240,8 @@ int_exit:
 	add    $2,%sp  // skip int_num *
 
 	// Interrupt return for remaining IP CS FL
+
+	time_sample 2
 
 	iret
 

@@ -20,6 +20,7 @@
 #ifndef _ASSEMBLY
 
 void watchdog (void);
+void led_blink (void);
 void system_init (void);
 
 #endif // !_ASSEMBLY

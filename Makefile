@@ -13,18 +13,19 @@ LDFLAGS = -T raw.ld
 EXE = sys86.bin
 
 OBJS= \
-  entry.o \
-  arch.o \
-  task.o \
-  int-dev.o \
-  int-arch.o \
-  int-proc.o \
-  timer.o \
-  queue.o \
-  serial.o \
-  system.o \
-  main.o \
-  # end of list
+	entry.o \
+	lib.o \
+	arch.o \
+	task.o \
+	int-dev.o \
+	int-arch.o \
+	int-proc.o \
+	timer.o \
+	queue.o \
+	serial.o \
+	system.o \
+	main.o \
+	# end of list
 
 .PHONY : all clean test
 

@@ -14,3 +14,9 @@ void int_end (word_t vect)
 
 	outw (IO_INT_EOI, vect);
 	}
+
+/*
+void int_init (void)
+	{
+	}
+*/

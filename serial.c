@@ -35,16 +35,17 @@ void serial_proc (void)
 	if (stat & SERIAL_STATUS_RDR) {
 		word_t c = inw (IO_SERIAL_RDATA);
 		time_sample (1);
-		if (!queue_put (&serial_in, (byte_t) c))
+		if (queue_not_full (&serial_in)) {
+			queue_put (&serial_in, (byte_t) c);
 			task_event (&serial_in);
+			}
 		}
 	}
 
-int serial_read (byte_t * c)
+byte_t serial_read (void)
 	{
-	task_wait (&serial_in, (cond_f) queue_not_empty);
-	queue_get (&serial_in, c);
-	return 1;
+	task_wait (&serial_in, (cond_f) queue_not_empty, 1);
+	return queue_get (&serial_in);
 	}
 
 void serial_send (byte_t c)

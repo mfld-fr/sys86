@@ -3,7 +3,7 @@
 
 CC = ia16-elf-gcc
 # ES only for segment please!
-CFLAGS = -ffreestanding -mcmodel=tiny -mprotected-mode
+CFLAGS = -Os -ffreestanding -mcmodel=tiny -mprotected-mode
 
 AS = ia16-elf-as
 

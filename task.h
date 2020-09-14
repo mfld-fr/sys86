@@ -11,7 +11,7 @@
 
 #define STACK_SIZE 256
 
-#define TASK_MAX 2
+#define TASK_MAX 1
 
 // Offsets in task_s structure
 
@@ -67,7 +67,7 @@ void task_init_near (int i, struct task_s * t, void * entry, word_t * stack, wor
 void schedule (void);
 
 typedef int (* cond_f) (void * object);
-void task_wait (void * object, cond_f test);
+void task_wait (void * object, cond_f test, int single);
 void task_event (void * object);
 
 void task_init (void);

@@ -33,18 +33,20 @@ static void main_echo (void)
 		// Read from serial port
 		// Blocking operation
 
-		byte_t c;
-		serial_read (&c);
+		byte_t c = serial_read ();
 
 		// Echo to serial port
 
 		serial_send (c);
+		time_sample (3);
 
 		// Send time samples
 
 		send_diff (0, 1);
 		serial_send (' ');
 		send_diff (1, 2);
+		serial_send (' ');
+		send_diff (2, 3);
 		serial_send (13);
 		serial_send (10);
 		}
@@ -61,8 +63,6 @@ void main ()
 	timer_init ();   // timer device
 	serial_init ();  // serial port
 	task_init ();    // task manager
-
-	//queue_init (&queue_0);
 
 	task_init_near (0, &task_echo, main_echo, stack_echo, STACK_SIZE);
 

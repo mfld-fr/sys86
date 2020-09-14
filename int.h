@@ -69,7 +69,7 @@ void vect_init ();
 void int_proc (word_t int_num);
 void int_end (word_t vect);
 
-void int_enable (void);
+//void int_enable (void);
 word_t int_save (void);
 void int_back (word_t saved);
 

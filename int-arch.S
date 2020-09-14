@@ -343,7 +343,6 @@ stack_init_far:
 	stosw   // FL
 
 	pop     %es
-	pop     %di
 
 	// Save stack top in task
 
@@ -351,6 +350,7 @@ stack_init_far:
 	mov     %dx,TOP_SS(%bx)
 
 	pop     %si
+	pop     %di
 	pop     %bp
 	ret
 
@@ -383,14 +383,14 @@ stack_init_near:
 	ret
 
 //------------------------------------------------------------------------------
-
+/*
 	.global int_enable
 
 int_enable:
 
 	sti
 	ret
-
+*/
 //------------------------------------------------------------------------------
 
 	.global int_save

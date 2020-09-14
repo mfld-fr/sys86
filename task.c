@@ -7,7 +7,6 @@
 #include "task.h"
 
 // Array of tasks
-// Priority is array order
 
 struct task_s * tasks [TASK_MAX];
 
@@ -33,7 +32,6 @@ static void idle (void)
 //------------------------------------------------------------------------------
 
 // Task scheduler
-// Priority is task array order
 
 void schedule (void)
 	{
@@ -48,6 +46,9 @@ void schedule (void)
 		sched_need = 0;
 
 		struct task_s * n = NULL;
+
+		// Priority in task array order
+		// with 0 as highest priority
 
 		for (int i = 0; i < TASK_MAX; i++) {
 			struct task_s * t = tasks [i];
@@ -78,11 +79,9 @@ void schedule (void)
 
 // Wait for event occurrence
 
-void task_wait (void * object, cond_f test)
+void task_wait (void * object, cond_f test, int single)
 	{
 	word_t flag;
-
-	// TODO: no need to loop if unique waiter for event
 
 	while (1) {
 		// Atomic condition test & prepare to sleep
@@ -97,6 +96,10 @@ void task_wait (void * object, cond_f test)
 		// to give a chance before sleeping
 
 		schedule ();
+
+		// No need to loop if single waiter on object
+
+		if (single) return;
 		}
 
 	int_back (flag);
@@ -133,10 +136,10 @@ void task_init_near (int i, struct task_s * t, void * entry, word_t * stack, wor
 	t->ssize = size;
 	stack_init_near (t, entry, stack + size);
 	t->stat = TASK_RUN;
-	tasks [i] = t;
+	if (i >= 0) tasks [i] = t;
 	}
 
 void task_init (void)
 	{
-	task_init_near (TASK_MAX - 1, &task_idle, idle, stack_idle, STACK_SIZE);
+	task_init_near (-1, &task_idle, idle, stack_idle, STACK_SIZE);
 	}

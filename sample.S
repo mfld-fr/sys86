@@ -7,7 +7,7 @@
 	push   %bx
 	push   %dx
 
-	mov     $IO_TIMER2_COUNT,%dx
+	mov     $IO_TIMER1_COUNT,%dx
 	in      %dx,%ax
 
 	lea    time_samples,%bx

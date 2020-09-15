@@ -15,13 +15,13 @@ void timer0_proc (void)
 	}
 
 // Time sampling
-// Use the T2 timer @ 5 MHz
+// Use the T1 timer @ 5 MHz
 
 word_t time_samples [SAMPLE_MAX];
 
 void time_sample (word_t index)
 	{
-	time_samples [index] = inw (IO_TIMER2_COUNT);
+	time_samples [index] = inw (IO_TIMER1_COUNT);
 	}
 
 word_t time_diff (word_t begin, word_t end)

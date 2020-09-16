@@ -39,7 +39,7 @@ void int_proc (word_t vect)
 
 	flags = int_save ();
 	sched_lock--;
-	if (sched_need) schedule ();
+	if (sched_need) task_sched ();
 	int_level--;
 	int_back (flags);
 	}

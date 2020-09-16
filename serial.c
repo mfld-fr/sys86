@@ -24,7 +24,7 @@
 // Generic I/O queues
 
 static struct queue_s serial_in;
-//static struct queue_s serial_out;
+static struct wait_s serial_wait;
 
 // Interrupt procedure
 
@@ -37,14 +37,14 @@ void serial_proc (void)
 		time_sample (1);
 		if (queue_not_full (&serial_in)) {
 			queue_put (&serial_in, (byte_t) c);
-			task_event (&serial_in);
+			task_event (&serial_wait);
 			}
 		}
 	}
 
 byte_t serial_read (void)
 	{
-	task_wait (&serial_in, (cond_f) queue_not_empty, 1);
+	task_wait (&serial_wait, (cond_f) queue_not_empty, &serial_in, 1);
 	return queue_get (&serial_in);
 	}
 

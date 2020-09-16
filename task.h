@@ -25,10 +25,22 @@
 
 #ifndef _ASSEMBLY
 
+// Forward declaration
+
+struct task_s;
+
+// Wait structure
+// Very simplified wait queue :-)
+
+struct wait_s
+	{
+	struct task_s * t;
+	};
+
 // Task structure
 
-struct task_s {
-
+struct task_s
+	{
 	// Shared with assembly
 
 	reg_t top_sp;    // 0
@@ -42,7 +54,7 @@ struct task_s {
 	// C only
 
 	int stat;
-	void * wait;  // object waited for
+	struct wait_s * wait;  // object waited for
 	};
 
 extern struct task_s * tasks [TASK_MAX];
@@ -64,11 +76,11 @@ void task_switch (void);
 
 void task_init_near (int i, struct task_s * t, void * entry, word_t * stack, word_t size);
 
-void schedule (void);
+void task_sched (void);
 
 typedef int (* cond_f) (void * object);
-void task_wait (void * object, cond_f test, int single);
-void task_event (void * object);
+void task_wait (struct wait_s * wait, cond_f test, void * param, int single);
+void task_event (struct wait_s * wait);
 
 void task_init (void);
 

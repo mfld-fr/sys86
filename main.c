@@ -17,6 +17,7 @@ static word_t stack_recv [STACK_SIZE];
 static word_t stack_send [STACK_SIZE];
 
 static struct queue_s queue_0;
+static struct wait_s wait_0;
 
 static void send_diff (word_t begin, word_t end)
 	{
@@ -52,9 +53,9 @@ static void main_recv (void)
 		// Put into intertask queue
 
 		time_sample (1);
-		task_wait (&queue_0, (cond_f) queue_not_full, 1);
+		task_wait (&wait_0, (cond_f) queue_not_full, &queue_0, 1);
 		queue_put (&queue_0, c);
-		task_event (&queue_0);  // not more empty
+		task_event (&wait_0);  // not more empty
 		}
 	}
 
@@ -63,9 +64,9 @@ static void main_send (void)
 	while (1) {
 		// Wait for data in queue
 
-		task_wait (&queue_0, (cond_f) queue_not_empty, 1);
+		task_wait (&wait_0, (cond_f) queue_not_empty, &queue_0, 1);
 		byte_t c = queue_get (&queue_0);
-		task_event (&queue_0);  // not more full
+		task_event (&wait_0);  // not more full
 		time_sample (3);
 
 		// Send to serial port

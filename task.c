@@ -33,7 +33,7 @@ static void idle (void)
 
 // Task scheduler
 
-void schedule (void)
+void task_sched (void)
 	{
 	word_t flags = int_save ();
 
@@ -79,7 +79,7 @@ void schedule (void)
 
 // Wait for event occurrence
 
-void task_wait (void * object, cond_f test, int single)
+void task_wait (struct wait_s * wait, cond_f test, void * param, int single)
 	{
 	word_t flag;
 
@@ -87,15 +87,16 @@ void task_wait (void * object, cond_f test, int single)
 		// Atomic condition test & prepare to sleep
 
 		flag = int_save ();
-		if (test (object)) break;
-		task_cur->wait = object;
+		if (test (param)) break;
+		task_cur->wait = wait;
+		wait->t = task_cur;
 		task_cur->stat = TASK_WAIT;
 		int_back (flag);
 
 		// Interrupt enabled for a short time
-		// to give a chance before sleeping
+		// to give a latest chance before sleeping
 
-		schedule ();
+		task_sched ();
 
 		// No need to loop if single waiter on object
 
@@ -109,20 +110,18 @@ void task_wait (void * object, cond_f test, int single)
 // TODO: no need to reschedule
 // if waking up lower prioritized than current
 
-void task_event (void * object)
+void task_event (struct wait_s * wait)
 	{
 	word_t flags = int_save ();
 
-	for (int i = 0; i < TASK_MAX; i++) {
-		struct task_s * t = tasks [i];
-		if (t && (t->stat == TASK_WAIT) && (t->wait == object)) {
-			t->wait = NULL;
-			t->stat = TASK_RUN;
-			sched_need++;
-			}
+	if (wait->t) {
+		wait->t->wait = NULL;
+		wait->t->stat = TASK_RUN;
+		wait->t = NULL;
+		sched_need++;
 		}
 
-	if (sched_need) schedule ();
+	if (sched_need) task_sched ();
 
 	int_back (flags);
 	}

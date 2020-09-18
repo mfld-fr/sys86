@@ -10,11 +10,8 @@
 //------------------------------------------------------------------------------
 
 entry:
-	// Disable interrupt until complete initialization
 
-	cli
-
-	// Setup data & stack segment
+	// Setup data segment
 	// in tiny memory model
 
 	mov    %cs,%ax
@@ -24,9 +21,11 @@ entry:
 	// Temporary stack at end of data segment
 	// until first task switch and heap initialization
 
+	cli
 	mov    %ax,%ss
 	xor    %ax,%ax
 	mov    %ax,%sp
+	sti
 
 	// Reset BSS section
 	// as required by GCC-IA16
@@ -36,14 +35,28 @@ entry:
 	sub    %di,%cx
 	xor    %al,%al
 	cld
-	rep
-	stosb
 
-	jmp    main
+	// REP STOSB too long for HW watchdog
+	// so split instruction to allow interrupt
+	// and MON86 timer tick to quiet the dog
+
+1:	stosb
+	loop    1b
+
+	// Main C function
+
+	call    main
+
+	// Unexpected return
+
+1:	hlt
+	jmp     1b
 
 //------------------------------------------------------------------------------
 
 	.bss
+
+	// TODO: replace by linker variable
 
 	.global bss_begin
 

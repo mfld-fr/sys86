@@ -16,12 +16,9 @@
 // Offsets in task_s structure
 
 #define TOP_SP     2*0
-#define TOP_SS     2*1
-#define USER_SP    2*2
-#define USER_SS    2*3
-#define task_level 2*4
-#define task_stack 2*5
-#define task_ssize 2*6
+#define task_level 2*1
+#define task_stack 2*2
+#define task_ssize 2*3
 
 #ifndef _ASSEMBLY
 
@@ -44,12 +41,9 @@ struct task_s
 	// Shared with assembly
 
 	reg_t top_sp;    // 0
-	seg_t top_ss;    // 1
-	reg_t user_sp;   // 2
-	seg_t user_ss;   // 3
-	word_t level;    // 4
-	word_t * stack;  // 5
-	word_t ssize;    // 6
+	word_t level;    // 1
+	word_t * stack;  // 2
+	word_t ssize;    // 3
 
 	// C only
 

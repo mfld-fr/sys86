@@ -21,6 +21,7 @@ vect_init:
 	push    %es
 	xor     %ax,%ax
 	mov     %ax,%es
+
 	cli
 
 	// Timer vector
@@ -34,6 +35,8 @@ vect_init:
 	mov     $4*VECT_SERIAL,%bx
 	movw    $int_serial,%es:(%bx)
 	mov     %cs,%es:2(%bx)
+
+	sti
 
 	// System vector
 
@@ -49,7 +52,6 @@ vect_init:
 	mov     %ax,%es:(%bx)
 	mov     %ds,%es:2(%bx)
 
-	sti
 	pop     %es
 	ret
 
@@ -95,35 +97,23 @@ int_hand:
 	// and stack switch completed
 
 	// IP CS FL already pushed
-	// Push remaining registers
+	// Get some registers available
 
+	push    %bp
+	mov     %sp,%bp
+	push    %ss
+	push    %bp  // actually old SP
 	push    %es
 	push    %ds
-
-#ifdef CPU_186
-	pusha
-#else
 	push    %ax
-	push    %cx
-	push    %dx
-	push    %bx
-	sub     $2,%sp  // skip dummy SP
-	push    %bp
 	push    %si
-	push    %di
-#endif
 
 	// Switch to kernel data segment
 
-	xor     %dx,%dx
-	mov     %dx,%ds
-	mov     4*VECT_GLOBAL+2,%dx
-	mov     %dx,%ds
-
-	// Save old stack top
-
-	mov     %sp,%bp
-	mov     %ss,%cx
+	xor     %ax,%ax
+	mov     %ax,%ds
+	mov     4*VECT_GLOBAL+2,%ax
+	mov     %ax,%ds
 
 	// Increment & check task level
 	// =1: was in user mode
@@ -136,33 +126,44 @@ int_hand:
 	cmp     $1,%ax
 	jne     1f
 
-	// Was in user mode
+	// Was on user stack
 	// Switch to kernel stack
-
-	mov     %bp,USER_SP(%si)
-	mov     %cx,USER_SS(%si)
 
 	mov     task_stack(%si),%sp
 	add     task_ssize(%si),%sp
-	mov     %dx,%ss
+	mov     %ss,%ax
+	mov     %ax,%es
+	mov     %ds,%ax
+	mov     %ax,%ss
 
-	// Get interrupt number
+	push    %es:-2*1(%bp)  // old SS
+	push    %es:-2*2(%bp)  // old SP
+	push    %es:-2*3(%bp)  // ES
+	push    %es:-2*4(%bp)  // DS
+	push    %es:-2*5(%bp)  // AX
+	push    %es:-2*6(%bp)  // SI
 
-1:	sti
+	// Push remaining unsaved registers
 
-	mov     %cx,%es
-	mov     %es:regs_num(%bp),%bx
-	mov     %cs:(%bx),%ax
-	mov     %dx,%es
+1:	push    %bx
+	push    %cx
+	push    %dx
+	push    %di
+
+	// Get interrupt vector number
+
+	sti
+
+	mov     %es:2*1(%bp),%bx  // vect num *
+	mov     %cs:(%bx),%dx
+	mov     %ds,%ax
+	mov     %ax,%es
 
 	// Call interrupt procedure
-	// with far pointer to saved context
 
-	push    %cx
-	push    %bp
-	push    %ax
+	push    %dx
 	call    int_proc
-	add     $2*3,%sp
+	add     $2,%sp
 
 	// Keep interrupt disabled
 	// until all stack switches completed
@@ -170,21 +171,12 @@ int_hand:
 
 	cli
 
-	// Decrement & check task level
+	// Decrement task level
 	// =0: back to user mode
 	// >0: still in kernel mode
 
 	//mov     task_cur,%si
-	mov     task_level(%si),%ax
-	dec     %ax
-	mov     %ax,task_level(%si)
-	jnz     int_exit
-
-	// Back to user mode
-	// Switch to user stack
-
-	mov     USER_SP(%si),%sp
-	mov     USER_SS(%si),%ss
+	decw    task_level(%si)
 
 	// Now the interrupt stack is empty
 	// and context on top of interrupted stack
@@ -199,7 +191,6 @@ int_exit:
 	jz      1f
 
 	mov     %sp,TOP_SP(%bx)
-	mov     %ss,TOP_SS(%bx)
 
 	xor     %bx,%bx
 	mov     %bx,task_prev
@@ -211,7 +202,6 @@ int_exit:
 	jz      1f
 
 	mov     TOP_SP(%bx),%sp
-	mov     TOP_SS(%bx),%ss
 
 	mov     %bx,task_cur
 	xor     %bx,%bx
@@ -219,25 +209,20 @@ int_exit:
 
 	// Restore registers from stack
 
-1:
-
-#ifdef CPU_186
-	popa
-#else
-	pop     %di
-	pop     %si
-	pop     %bp
-	add     $2,%sp  // skip dummy SP
-	pop     %bx
+1:	pop     %di
 	pop     %dx
 	pop     %cx
+	pop     %bx
+	pop     %si
 	pop     %ax
-#endif
+	pop     %ds
+	pop     %es
+	pop     %bp  // actually new SP
+	pop     %ss
+	mov     %bp,%sp
+	pop     %bp
 
-	pop    %ds
-	pop    %es
-
-	add    $2,%sp  // skip int_num *
+	add     $2,%sp  // skip vect num *
 
 	// Interrupt return for remaining IP CS FL
 
@@ -265,36 +250,38 @@ task_switch:
 
 	// Push other registers
 
-	sub     $2,%sp  // skip int_num *
+	sub     $2,%sp  // skip vect num *
+
+	push    %bp
+	mov     %sp,%bp
+	push    %ss
+	push    %bp
 
 	push    %es
 	push    %ds
 
-#ifdef CPU_186
-	pusha
-#else
 	push    %ax
+	push    %si
+	push    %bx
 	push    %cx
 	push    %dx
-	push    %bx
-	sub     $2,%sp  // skip dummy SP
-	push    %bp
-	push    %si
 	push    %di
-#endif
 
 	// Rearrange to IP CS FL
 
-	mov     %sp,%bp
-	mov     regs_ip(%bp),%ax
-	xchg    %ax,regs_fl(%bp)
-	mov     %ax,regs_ip(%bp)
+	mov     2*2(%bp),%ax  // pushed FL
+	xchg    %ax,2*4(%bp)  // exchange with pushed IP
+	mov     %ax,2*2(%bp)  // right IP
 
 	// Now jump to interrupt exit
+
+	cli
 
 	jmp     int_exit
 
 //------------------------------------------------------------------------------
+/*
+TODO: rework for kernel / user stack chain
 
 	.global stack_init_far
 
@@ -353,6 +340,7 @@ stack_init_far:
 	pop     %di
 	pop     %bp
 	ret
+*/
 
 //------------------------------------------------------------------------------
 
@@ -370,15 +358,37 @@ stack_init_near:
 	push    %bp
 	mov     %sp,%bp
 
-	push    %ss
-	push    8(%bp)  // arg3 = SP
-	push    %cs
-	push    6(%bp)  // arg2 = IP
-	push    4(%bp)  // arg1 = task *
+	mov     4(%bp),%bx  // arg1: task *
 
-	call    stack_init_far
-	add     $2*5,%sp
+	push    %di
+	mov     8(%bp),%di  // arg3: task SP
+	sub     $REGS_SIZE,%di
+	mov     %di,TOP_SP(%bx)
 
+	cld
+	xor     %ax,%ax
+	mov     $6,%cx  // 6 general registers
+	rep
+	stosw   // DI DX CX BX SI AX
+	mov     %ds,%ax
+	stosw   // DS
+	stosw   // ES
+	mov     %di,%ax
+	add     $2*2,%ax
+	stosw   // old SP
+	mov     %ss,%ax
+	stosw   // SS
+	xor     %ax,%ax
+	stosw   // BP
+	stosw   // vect num *
+	mov     6(%bp),%ax  // arg2: task IP
+	stosw   // IP
+	mov     %cs,%ax
+	stosw   // CS
+	mov     $0x200,%ax  // STI
+	stosw   // FL
+
+	pop     %di
 	pop     %bp
 	ret
 

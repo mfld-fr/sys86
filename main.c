@@ -83,9 +83,8 @@ static void main_send (void)
 		}
 	}
 
-void main ()
+int main ()
 	{
-	// Interrupt disabled on entry
 	// System initialization
 	// TODO: move to system.c
 
@@ -104,4 +103,5 @@ void main ()
 
 	task_next = &task_send;
 	task_switch ();
+	return 0;
 	}

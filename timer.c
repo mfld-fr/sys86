@@ -33,16 +33,24 @@ word_t time_diff (word_t begin, word_t end)
 
 void timer_init (void)
 	{
-	// Disable unused T1 timer @ 1000 Hz to save power
+	// Disable T1 timer
 
 	word_t t1m = inw (IO_TIMER1_MODE);
 	t1m &= 0x7FFF;  // disable timer bit
 	t1m |= 0x4000;  // unlock enable bit
 	outw (IO_TIMER1_MODE, t1m);
 
+	// Change T1 max count
+
+	outw (IO_TIMER1_MAX, 0xFFFF);
+
+	// Enable T1 back
+
+	outw (IO_TIMER1_MODE, 0xC001);
+
 	// T0 timer @ 1 Hz
 	// T2 timer @ 1 KHz
 
-	outw (IO_TIMER0_MAX, 1000);
-	outw (IO_TIMER2_MAX, 5000);
+	//outw (IO_TIMER0_MAX, 1000);
+	//outw (IO_TIMER2_MAX, 5000);
 	}

@@ -27,12 +27,21 @@ OBJS= \
 	main.o \
 	# end of list
 
+EXE2 = stub.bin
+
+OBJS2 = \
+	stub.o
+	# end of list
+
 .PHONY : all clean test
 
-all: $(EXE)
+all: $(EXE) $(EXE2)
 
 $(EXE): $(OBJS)
 	$(LD) $(LDFLAGS) -M -o $(EXE) $(OBJS) > sys86.map
+
+$(EXE2): $(OBJS2)
+	$(LD) $(LDFLAGS) -M -o $(EXE2) $(OBJS2) > stub.map
 
 clean:
 	rm -f $(EXE) $(OBJS) sys86.map

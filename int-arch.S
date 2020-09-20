@@ -103,10 +103,10 @@ int_hand:
 	mov     %sp,%bp
 	push    %ss
 	push    %bp  // actually old SP
-	push    %es
 	push    %ds
 	push    %ax
 	push    %si
+	push    %di
 
 	// Switch to kernel data segment
 
@@ -129,39 +129,38 @@ int_hand:
 	// Was on user stack
 	// Switch to kernel stack
 
-	mov     task_stack(%si),%sp
-	add     task_ssize(%si),%sp
-	mov     %ss,%ax
-	mov     %ax,%es
+	mov     task_stack(%si),%di
+	add     task_ssize(%si),%di
+	sub     $REGS_KERN,%di
+
+	pop     regs_di(%di)
+	pop     regs_si(%di)
+	pop     regs_ax(%di)
+	pop     regs_ds(%di)
+	pop     regs_sp(%di)
+	pop     regs_ss(%di)
+
+	mov     2*1(%bp),%bp  // vect num *
+
+	lea     regs_di(%di),%sp
 	mov     %ds,%ax
 	mov     %ax,%ss
 
-	push    %es:-2*1(%bp)  // old SS
-	push    %es:-2*2(%bp)  // old SP
-	push    %es:-2*3(%bp)  // ES
-	push    %es:-2*4(%bp)  // DS
-	push    %es:-2*5(%bp)  // AX
-	push    %es:-2*6(%bp)  // SI
-
 	// Push remaining unsaved registers
 
-1:	push    %bx
+1:	push    %es
+	push    %bx
 	push    %cx
 	push    %dx
-	push    %di
-
-	// Get interrupt vector number
 
 	sti
 
-	mov     %es:2*1(%bp),%bx  // vect num *
-	mov     %cs:(%bx),%dx
 	mov     %ds,%ax
 	mov     %ax,%es
 
 	// Call interrupt procedure
 
-	push    %dx
+	pushw   %cs:(%bp)
 	call    int_proc
 	add     $2,%sp
 
@@ -209,14 +208,14 @@ int_exit:
 
 	// Restore registers from stack
 
-1:	pop     %di
-	pop     %dx
+1:	pop     %dx
 	pop     %cx
 	pop     %bx
+	pop     %es
+	pop     %di
 	pop     %si
 	pop     %ax
 	pop     %ds
-	pop     %es
 	pop     %bp  // actually new SP
 	pop     %ss
 	mov     %bp,%sp
@@ -256,18 +255,16 @@ task_switch:
 	mov     %sp,%bp
 	push    %ss
 	push    %bp
-
-	push    %es
 	push    %ds
-
 	push    %ax
 	push    %si
+	push    %di
+	push    %es
 	push    %bx
 	push    %cx
 	push    %dx
-	push    %di
 
-	// Rearrange to IP CS FL
+	// Rearrange IP CS FL
 
 	mov     2*2(%bp),%ax  // pushed FL
 	xchg    %ax,2*4(%bp)  // exchange with pushed IP
@@ -280,8 +277,6 @@ task_switch:
 	jmp     int_exit
 
 //------------------------------------------------------------------------------
-/*
-TODO: rework for kernel / user stack chain
 
 	.global stack_init_far
 
@@ -289,58 +284,67 @@ TODO: rework for kernel / user stack chain
 // Tiny or small memory model SS=DS=ES
 
 //  +4: arg1: task *
-//  +6: arg2: task IP
-//  +8: arg3: task CS
-// +10: arg4: task SP
-// +12: arg5: task SS
+//  +6: arg2: task IP (user)
+//  +8: arg3: task CS (user)
+// +10: arg4: task SP (user)
+// +12: arg5: task SS (user)
+// +14: arg6: task SP (kernel)
 
 stack_init_far:
 
 	push    %bp
 	mov     %sp,%bp
 
-	mov     4(%bp),%bx  // arg1
+	mov     4(%bp),%bx  // arg1: task *
 
 	push    %di
-	mov     10(%bp),%di  // arg4
-	mov     12(%bp),%dx  // arg5
-	sub     $REGS_SIZE,%di
+	mov     14(%bp),%di  // arg6: task SP (kernel)
+	sub     $REGS_KERN,%di  // room on kernel stack
+	mov     %di,TOP_SP(%bx)
 
-	push    %si
-	mov     %di,%si
-
-	push    %es
-	mov     %dx,%es
+	// Kernel stack
 
 	cld
 	xor     %ax,%ax
-	mov     $8,%cx  // 8 general registers
-	rep
-	stosw   // DI SI BP dummy-SP BX DX CX AX
-	mov     %dx,%ax
-	stosw   // DS
+	stosw   // DX
+	stosw   // CX
+	stosw   // BX
+	mov     12(%bp),%ax  // arg5: task SS (user)
+	mov     %ax,%dx
 	stosw   // ES
 	xor     %ax,%ax
-	stosw   // int num *
-	mov     6(%bp),%ax  // arg2
+	stosw   // DI
+	stosw   // SI
+	stosw   // AX
+	mov     %dx,%ax
+	stosw   // DS
+	mov     10(%bp),%ax  // arg4: task SP (user)
+	sub     $REGS_USER,%ax  // room on user stack
+	mov     %ax,%cx
+	stosw   // SP
+	mov     %dx,%ax
+	stosw   // SS
+
+	// User stack
+
+	mov     %cx,%di
+	push    %es
+	mov     %dx,%es
+
+	xor     %ax,%ax
+	stosw   // BP
+	stosw   // vect num *
+	mov     6(%bp),%ax  // arg2: task IP (user)
 	stosw   // IP
-	mov     8(%bp),%ax  // arg3
+	mov     8(%bp),%ax  // arg3: task CS (user)
 	stosw   // CS
 	mov     $0x200,%ax  // STI
 	stosw   // FL
 
 	pop     %es
-
-	// Save stack top in task
-
-	mov     %si,TOP_SP(%bx)
-	mov     %dx,TOP_SS(%bx)
-
-	pop     %si
 	pop     %di
 	pop     %bp
 	ret
-*/
 
 //------------------------------------------------------------------------------
 
@@ -350,8 +354,8 @@ stack_init_far:
 // Tiny or small memory model SS=DS=ES
 
 // +4: arg1: task *
-// +6: arg2: task IP
-// +8: arg3: task SP
+// +6: arg2: task IP (kernel)
+// +8: arg3: task SP (kernel)
 
 stack_init_near:
 
@@ -361,27 +365,33 @@ stack_init_near:
 	mov     4(%bp),%bx  // arg1: task *
 
 	push    %di
-	mov     8(%bp),%di  // arg3: task SP
+	mov     8(%bp),%di  // arg3: task SP (kernel)
 	sub     $REGS_SIZE,%di
 	mov     %di,TOP_SP(%bx)
 
 	cld
 	xor     %ax,%ax
-	mov     $6,%cx  // 6 general registers
-	rep
-	stosw   // DI DX CX BX SI AX
+	stosw   // DX
+	stosw   // CX
+	stosw   // BX
+	mov     %ds,%ax
+	stosw   // ES
+	xor     %ax,%ax
+	stosw   // DI
+	stosw   // SI
+	stosw   // AX
 	mov     %ds,%ax
 	stosw   // DS
-	stosw   // ES
 	mov     %di,%ax
 	add     $2*2,%ax
 	stosw   // old SP
 	mov     %ss,%ax
 	stosw   // SS
+
 	xor     %ax,%ax
 	stosw   // BP
 	stosw   // vect num *
-	mov     6(%bp),%ax  // arg2: task IP
+	mov     6(%bp),%ax  // arg2: task IP (kernel)
 	stosw   // IP
 	mov     %cs,%ax
 	stosw   // CS

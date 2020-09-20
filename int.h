@@ -24,14 +24,14 @@
 // Same offsets as in reg_s structure
 
 // Both interrupted user & kernel
-#define regs_di     2*0x0
-#define regs_dx     2*0x1
-#define regs_cx     2*0x2
-#define regs_bx     2*0x3
-#define regs_si     2*0x4
-#define regs_ax     2*0x5
-#define regs_ds     2*0x6
-#define regs_es     2*0x7
+#define regs_dx     2*0x0
+#define regs_cx     2*0x1
+#define regs_bx     2*0x2
+#define regs_es     2*0x3
+#define regs_di     2*0x4
+#define regs_si     2*0x5
+#define regs_ax     2*0x6
+#define regs_ds     2*0x7
 #define regs_sp     2*0x8
 #define regs_ss     2*0x9
 // Only for interrupted kernel
@@ -41,6 +41,8 @@
 #define regs_cs     2*0xD
 #define regs_fl     2*0xE
 
+#define REGS_KERN   2*0xA
+#define REGS_USER   2*0x5
 #define REGS_SIZE   2*0xF
 
 #ifndef _ASSEMBLY

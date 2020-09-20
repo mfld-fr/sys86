@@ -138,6 +138,16 @@ void task_init_near (int i, struct task_s * t, void * entry, word_t * stack, wor
 	if (i >= 0) tasks [i] = t;
 	}
 
+void task_init_far (int i, struct task_s * t, word_t seg, word_t * stack, word_t size)
+	{
+	t->level = 0;
+	t->stack = stack;
+	t->ssize = size;
+	stack_init_far (t, 0, seg, 0, seg, stack + size);
+	t->stat = TASK_RUN;
+	if (i >= 0) tasks [i] = t;
+	}
+
 void task_init (void)
 	{
 	task_init_near (-1, &task_idle, idle, stack_idle, STACK_SIZE);

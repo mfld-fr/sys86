@@ -58,5 +58,5 @@ void serial_init (void)
 	{
 	// Enable serial receive interrupt
 
-	//outw (IO_SERIAL_CONTROL, SERIAL_CONTROL_RIE); ???
+	// outw (IO_SERIAL_CONTROL, SERIAL_CONTROL_RIE); ???
 	}

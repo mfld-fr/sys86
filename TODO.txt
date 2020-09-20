@@ -2,11 +2,19 @@ Check TODO tag in source.
 
 Otherwise:
 
-- test on SBC
-- add serial TX interrupt (really needed ?)
-- add timer interrupt (EMU86 timer device needed)
+- add serial TX interrupt and send task
+- improve tracing facility
 - restore interrupt stack ?
 - monitor as first task ?
+
+First user task: serial echo
+
+1:  MOV AX,1  // read serial
+	INT 80h
+	MOV DX,AX
+	MOV AX,2  // send serial
+	INT 80h
+	JMP 1B
 
 How to save power ?
 

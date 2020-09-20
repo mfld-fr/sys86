@@ -11,7 +11,7 @@
 
 #define STACK_SIZE 256
 
-#define TASK_MAX 2
+#define TASK_MAX 3
 
 // Offsets in task_s structure
 
@@ -63,12 +63,14 @@ extern int sched_need;
 // From assembly
 
 void stack_init_near (struct task_s *, void * entry, word_t * stack);
+void stack_init_far (struct task_s *, word_t ip, word_t cs, word_t sp, word_t ss, word_t * stack);
 
 void task_switch (void);
 
 // From C code
 
 void task_init_near (int i, struct task_s * t, void * entry, word_t * stack, word_t size);
+void task_init_far (int i, struct task_s * t, word_t seg, word_t * stack, word_t size);
 
 void task_sched (void);
 

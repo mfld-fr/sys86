@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "config.h"
 #include "types.h"
 
 // Hardware interrupt vectors
@@ -50,14 +51,14 @@
 // Same offsets as defined by regs_* constants
 
 struct regs_s {
-	reg_t di;
 	reg_t dx;
 	reg_t cx;
 	reg_t bx;
+	reg_t es;
+	reg_t di;
 	reg_t si;
 	reg_t ax;
 	reg_t ds;
-	reg_t es;
 	seg_t ss;
 	reg_t sp;
 	reg_t bp;
@@ -77,5 +78,7 @@ void int_end (word_t vect);
 //void int_enable (void);
 word_t int_save (void);
 void int_back (word_t saved);
+
+void int_init (void);
 
 #endif  // !_ASSEMBLY

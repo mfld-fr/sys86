@@ -25,6 +25,7 @@ OBJS= \
 	serial.o \
 	system.o \
 	main.o \
+	trace-far.o \
 	# end of list
 
 EXE2 = stub.bin
@@ -54,3 +55,9 @@ test-emu:
 	sleep 1
 	../emu86/pcat -t 1000 -d 10 `cat emu86.pts` < test-sys86-in.txt > test-emu-out.txt
 	diff test-sys86-ref.txt test-emu-out.txt
+
+test-sbc:
+	stty /dev/ttyUSB0 -echo
+	./test-mon86-write 1000 0 ../sys86/sys86.bin
+	./test-mon86-write 2000 0 ../sys86/stub.bin
+	sudo ../emu86/pcat /dev/ttyUSB0

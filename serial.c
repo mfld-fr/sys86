@@ -31,10 +31,8 @@ static struct wait_s serial_wait;
 void serial_proc (void)
 	{
 	word_t stat = inw (IO_SERIAL_STATUS);
-
 	if (stat & SERIAL_STATUS_RDR) {
 		word_t c = inw (IO_SERIAL_RDATA);
-		time_sample (1);
 		if (queue_not_full (&serial_in)) {
 			queue_put (&serial_in, (byte_t) c);
 			task_event (&serial_wait);

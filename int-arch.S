@@ -6,8 +6,6 @@
 #include "task.h"
 #include "int.h"
 
-#include "sample.S"
-
 	.code16
 
 	.text
@@ -63,6 +61,12 @@ vect_init:
 
 int_timer0:
 
+#ifdef CONFIG_TRACE
+	pushw   $0x10
+	call    trace_far
+	add     $2,%sp
+#endif // CONFIG_TRACE
+
 	call    int_hand
 	.word   VECT_TIMER0
 
@@ -72,7 +76,11 @@ int_timer0:
 
 int_serial:
 
-	time_sample 0
+#ifdef CONFIG_TRACE
+	pushw   $0x20
+	call    trace_far
+	add     $2,%sp
+#endif // CONFIG_TRACE
 
 	call    int_hand
 	.word   VECT_SERIAL
@@ -225,7 +233,11 @@ int_exit:
 
 	// Interrupt return for remaining IP CS FL
 
-	time_sample 2
+#ifdef CONFIG_TRACE
+	pushw   $0x30
+	call    trace_far
+	add     $2,%sp
+#endif // CONFIG_TRACE
 
 	iret
 

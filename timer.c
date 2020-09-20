@@ -5,6 +5,45 @@
 #include "arch.h"
 #include "timer.h"
 #include "system.h"
+#include "task.h"
+
+//------------------------------------------------------------------------------
+
+#ifdef CONFIG_TRACE
+
+static struct wait_s timer_wait;
+
+// Wait timer
+
+static int timer_test (void * param)
+	{
+	return 0;
+	}
+
+void timer_get ()
+	{
+	task_wait (&timer_wait, timer_test, NULL, 1);
+	}
+
+// Time sampling
+
+struct trace_s traces [TRACE_MAX];
+word_t trace_count = 0;
+word_t trace_on = 0;
+
+void trace_near (word_t num)
+	{
+	if (trace_on && (trace_count < TRACE_MAX)) {
+		traces [trace_count].num = num;
+		traces [trace_count].usec = inw (IO_TIMER2_COUNT);  // actually 0.2 us
+		traces [trace_count].msec = inw (IO_TIMER0_COUNT);
+		trace_count++;
+		}
+	}
+
+#endif // CONFIG_TRACE
+
+//------------------------------------------------------------------------------
 
 // Interrupt procedure
 
@@ -12,21 +51,10 @@ void timer0_proc (void)
 	{
 	watchdog ();
 	led_blink ();
-	}
 
-// Time sampling
-// Use the T1 timer @ 5 MHz
-
-word_t time_samples [SAMPLE_MAX];
-
-void time_sample (word_t index)
-	{
-	time_samples [index] = inw (IO_TIMER1_COUNT);
-	}
-
-word_t time_diff (word_t begin, word_t end)
-	{
-	return (time_samples [end] - time_samples [begin]);
+#ifdef CONFIG_TRACE
+	task_event (&timer_wait);
+#endif // CONFIG_TRACE
 	}
 
 // Timer initialization
@@ -35,22 +63,26 @@ void timer_init (void)
 	{
 	// Disable T1 timer
 
-	word_t t1m = inw (IO_TIMER1_MODE);
-	t1m &= 0x7FFF;  // disable timer bit
-	t1m |= 0x4000;  // unlock enable bit
-	outw (IO_TIMER1_MODE, t1m);
-
-	// Change T1 max count
-
-	outw (IO_TIMER1_MAX, 0xFFFF);
-
-	// Enable T1 back
-
-	outw (IO_TIMER1_MODE, 0xC001);
+	outw (IO_TIMER1_MODE, 0x4000);
 
 	// T0 timer @ 1 Hz
 	// T2 timer @ 1 KHz
 
-	//outw (IO_TIMER0_MAX, 1000);
-	//outw (IO_TIMER2_MAX, 5000);
+	outw (IO_TIMER2_MODE, 0x4000);
+	outw (IO_TIMER0_MODE, 0x4000);
+
+	outw (IO_TIMER2_COUNT, 0);
+	outw (IO_TIMER0_COUNT, 0);
+
+	outw (IO_TIMER2_MAX, 5000);
+	outw (IO_TIMER0_MAX, 1000);
+
+	outw (IO_TIMER2_MODE, 0xC001);
+	outw (IO_TIMER0_MODE, 0xE009);
+
+	// In case adjusting the timers
+	// makes next timer interrupt too late
+	// to quiet the HW watchdog
+
+	watchdog ();
 	}

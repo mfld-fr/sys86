@@ -108,6 +108,8 @@ int_hand:
 	push    %si
 	push    %di
 
+	mov     2(%bp),%bp  // vect num *
+
 	// Switch to kernel data segment
 
 	xor     %ax,%ax
@@ -139,8 +141,6 @@ int_hand:
 	pop     regs_ds(%di)
 	pop     regs_sp(%di)
 	pop     regs_ss(%di)
-
-	mov     2*1(%bp),%bp  // vect num *
 
 	lea     regs_di(%di),%sp
 	mov     %ds,%ax

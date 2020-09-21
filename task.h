@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "config.h"
 #include "types.h"
 
 #define TASK_DOWN 0
@@ -15,10 +16,16 @@
 
 // Offsets in task_s structure
 
-#define TOP_SP     2*0
-#define task_level 2*1
-#define task_stack 2*2
-#define task_ssize 2*3
+#define task_stack 2*0
+#define task_ssize 2*1
+#define task_level 2*2
+#define TOP_SP     2*3
+
+#ifdef CONFIG_INT_USER
+#define TOP_SS     2*4
+#define USER_SP    2*5
+#define USER_SS    2*6
+#endif // CONFIG_INT_USER
 
 #ifndef _ASSEMBLY
 
@@ -40,10 +47,16 @@ struct task_s
 	{
 	// Shared with assembly
 
-	reg_t top_sp;    // 0
-	word_t level;    // 1
-	word_t * stack;  // 2
-	word_t ssize;    // 3
+	word_t * stack;  // 0
+	word_t ssize;    // 1
+	word_t level;    // 2
+	reg_t top_sp;    // 3
+
+#ifdef CONFIG_INT_USER
+	seg_t top_ss;    // 4
+	reg_t user_sp;   // 5
+	seg_t user_ss;   // 6
+#endif // CONFIG_INT_USER
 
 	// C only
 
@@ -63,7 +76,14 @@ extern int sched_need;
 // From assembly
 
 void stack_init_near (struct task_s *, void * entry, word_t * stack);
+
+#ifdef CONFIG_INT_USER
+void stack_init_far (struct task_s *, word_t ip, word_t cs, word_t sp, word_t ss);
+#endif // CONFIG_INT_USER
+
+#ifdef CONFIG_INT_KERN
 void stack_init_far (struct task_s *, word_t ip, word_t cs, word_t sp, word_t ss, word_t * stack);
+#endif // CONFIG_INT_KERN
 
 void task_switch (void);
 

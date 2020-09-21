@@ -101,8 +101,8 @@ static void main_recv (void)
 		// Read from serial port
 		// Blocking operation
 
-		byte_t c = serial_read ();
-		trace_near (0x100);
+		byte_t c = serial_get ();
+		//trace_near (0x100);
 
 		// Put into intertask queue
 
@@ -121,12 +121,12 @@ static void main_send (void)
 		task_wait (&wait_0, (cond_f) queue_not_empty, &queue_0, 1);
 		byte_t c = queue_get (&queue_0);
 		task_event (&wait_0);  // not more full
-		trace_near (0x200);
+		//trace_near (0x200);
 
 		// Send to serial port
 
 		serial_send (c);
-		trace_near (0x250);
+		//trace_near (0x250);
 		}
 	}
 

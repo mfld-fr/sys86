@@ -51,7 +51,7 @@ test: test-emu
 
 test-emu:
 	echo "*** WARNING : requires local emu86-sys ***"
-	../emu86/emu86 -w 0x10000 -f sys86.bin -x 0x1000:0x0 &
+	../emu86/emu86 -w 0x10000 -f sys86.bin -x 0x1000:0x0 -w 0x20000 -f stub.bin &
 	sleep 1
 	../emu86/pcat -t 1000 -d 10 `cat emu86.pts` < test-sys86-in.txt > test-emu-out.txt
 	diff test-sys86-ref.txt test-emu-out.txt

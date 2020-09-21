@@ -143,7 +143,15 @@ void task_init_far (int i, struct task_s * t, word_t seg, word_t * stack, word_t
 	t->level = 0;
 	t->stack = stack;
 	t->ssize = size;
+
+#ifdef CONFIG_INT_USER
+	stack_init_far (t, 0, seg, 0, seg);
+#endif // CONFIG_INT_USER
+
+#ifdef CONFIG_INT_KERN
 	stack_init_far (t, 0, seg, 0, seg, stack + size);
+#endif // CONFIG_INT_KERN
+
 	t->stat = TASK_RUN;
 	if (i >= 0) tasks [i] = t;
 	}

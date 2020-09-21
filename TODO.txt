@@ -3,16 +3,17 @@ Check TODO tag in source.
 Otherwise:
 
 - add serial TX interrupt and send task
-- improve tracing facility
+- multi-byte queue
+- multi-byte serial_send()
 - restore interrupt stack ?
 - monitor as first task ?
 
 First user task: serial echo
 
-1:  MOV AX,1  // read serial
+1:  MOV AX,1  // serial get
 	INT 80h
 	MOV DX,AX
-	MOV AX,2  // send serial
+	MOV AX,2  // serial put
 	INT 80h
 	JMP 1B
 

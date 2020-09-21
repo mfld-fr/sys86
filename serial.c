@@ -40,7 +40,7 @@ void serial_proc (void)
 		}
 	}
 
-byte_t serial_read (void)
+byte_t serial_get (void)
 	{
 	task_wait (&serial_wait, (cond_f) queue_not_empty, &serial_in, 1);
 	return queue_get (&serial_in);

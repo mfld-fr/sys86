@@ -8,6 +8,8 @@
 
 	.text
 
+#ifdef CONFIG_TRACE
+
 	.global trace_far
 
 trace_far:
@@ -53,3 +55,5 @@ trace_far:
 	pop     %ax
 	pop     %bp
 	ret
+
+#endif // CONFIG_TRACE

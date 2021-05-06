@@ -3,7 +3,7 @@
 
 CC = ia16-elf-gcc
 # ES only for segment please!
-CFLAGS = -Os -ffreestanding -mcmodel=tiny -mprotected-mode
+CFLAGS = -Os -ffreestanding -mcmodel=tiny -mprotected-mode -Wall
 
 AS = ia16-elf-as
 
@@ -45,15 +45,14 @@ $(EXE2): $(OBJS2)
 	$(LD) $(LDFLAGS) -M -o $(EXE2) $(OBJS2) > stub.map
 
 clean:
-	rm -f $(EXE) $(OBJS) sys86.map
+	rm -f $(EXE) $(EXE2) *.o sys86.map stub.map test-emu-out.txt
 
 test: test-emu
 
 test-emu:
-	echo "*** WARNING : requires local emu86-sys ***"
 	../emu86/emu86 -w 0x10000 -f sys86.bin -x 0x1000:0x0 -w 0x20000 -f stub.bin &
 	sleep 1
-	../emu86/pcat -t 1000 -d 10 `cat emu86.pts` < test-sys86-in.txt > test-emu-out.txt
+	../emu86/pcat -t 1000 -d 1 `cat emu86.pts` < test-sys86-in.txt > test-emu-out.txt
 	diff test-sys86-ref.txt test-emu-out.txt
 
 test-sbc:

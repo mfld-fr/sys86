@@ -17,9 +17,9 @@
 
 #define VECT_SYSTEM 0x80
 
-// Global vector with kernel DS
+// System global vector with kernel DS
 
-#define VECT_GLOBAL 0xFF
+#define VECT_GLOBAL 0x81
 
 #ifdef CONFIG_INT_USER
 #include "int-user.h"

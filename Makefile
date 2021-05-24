@@ -16,6 +16,7 @@ OBJS= \
 	entry.o \
 	lib.o \
 	list.o \
+	heap.o \
 	arch.o \
 	task.o \
 	int-dev.o \

@@ -8,6 +8,8 @@
 #include "queue.h"
 #include "serial.h"
 #include "lib.h"
+#include "heap.h"
+
 
 // Test code
 
@@ -130,10 +132,15 @@ static void main_send (void)
 		}
 	}
 
+
+extern void * _free_begin;
+
 int main ()
 	{
 	// System initialization
-	// TODO: move to system.c
+
+	heap_init ();
+	heap_add (_free_begin, 0xF000);
 
 	vect_init ();    // interrupt vectors
 	int_init ();     // interrupt controller

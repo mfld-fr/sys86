@@ -1,10 +1,7 @@
 
 #include "lib.h"
 
-char_t digit_to_hex (byte_t d)
-	{
-	return (d > 9) ? 'A' + d - 10 : '0' + d;
-	}
+static char_t hex [] = "0123456789ABCDEF";
 
 void word_to_hex (word_t val, char_t * str, byte_t * len)
 	{
@@ -12,7 +9,7 @@ void word_to_hex (word_t val, char_t * str, byte_t * len)
 	char_t buf [4];
 
 	while (1) {
-		buf [pos] = digit_to_hex ((byte_t) val & 0x000F);
+		buf [pos] = hex [val & 0x000F];
 		val >>= 4;
 		if (!val) break;
 		pos--;

@@ -15,6 +15,7 @@ EXE = sys86.bin
 OBJS= \
 	entry.o \
 	lib.o \
+	list.o \
 	arch.o \
 	task.o \
 	int-dev.o \

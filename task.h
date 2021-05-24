@@ -89,8 +89,8 @@ void task_switch (void);
 
 // From C code
 
-void task_init_near (int i, struct task_s * t, void * entry, word_t * stack, word_t size);
-void task_init_far (int i, struct task_s * t, word_t seg, word_t * stack, word_t size);
+void task_init_near (int i, struct task_s * t, void * entry, word_t size);
+void task_init_far (int i, struct task_s * t, word_t seg, word_t size);
 
 void task_sched (void);
 

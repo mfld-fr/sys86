@@ -13,6 +13,7 @@
 
 #define HEAP_TAG_FREE    0x00
 #define HEAP_TAG_USED    0x80
+#define HEAP_TAG_TASK    0x01
 
 
 // TODO: move free list node from header to body

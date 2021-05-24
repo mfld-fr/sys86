@@ -17,10 +17,6 @@ static struct task_s task_recv;
 static struct task_s task_send;
 static struct task_s task_stub;
 
-static word_t stack_recv [STACK_SIZE];
-static word_t stack_send [STACK_SIZE];
-static word_t stack_stub [STACK_SIZE];
-
 static struct queue_s queue_0;
 static struct wait_s wait_0;
 
@@ -29,7 +25,6 @@ static struct wait_s wait_0;
 #ifdef CONFIG_TRACE
 
 static struct task_s task_dump;
-static word_t stack_dump [STACK_SIZE];
 
 static void trace_dump (void)
 	{
@@ -140,7 +135,7 @@ int main ()
 	// System initialization
 
 	heap_init ();
-	heap_add (&_free_begin, 0xF000);
+	heap_add (&_free_begin, 0x8000);
 
 	vect_init ();    // interrupt vectors
 	int_init ();     // interrupt controller
@@ -148,16 +143,16 @@ int main ()
 	serial_init ();  // serial port
 	task_init ();    // task manager
 
-	task_init_near (0, &task_send, main_send, stack_send, STACK_SIZE);
-	task_init_near (1, &task_recv, main_recv, stack_recv, STACK_SIZE);
+	task_init_near (0, &task_send, main_send, STACK_SIZE);
+	task_init_near (1, &task_recv, main_recv, STACK_SIZE);
 
 #ifdef CONFIG_TRACE
-	task_init_near (2, &task_dump, main_dump, stack_dump, STACK_SIZE);
+	task_init_near (2, &task_dump, main_dump, STACK_SIZE);
 #endif // CONFIG_TRACE
 
 	// Idle task in user space
 
-	task_init_far (3, &task_stub, 0x2000, stack_stub, STACK_SIZE);
+	task_init_far (3, &task_stub, 0x2000, STACK_SIZE);
 
 	// Switch to first task
 	// Initial stack not needed any more

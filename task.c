@@ -5,6 +5,8 @@
 #include "arch.h"
 #include "int.h"
 #include "task.h"
+#include "heap.h"
+
 
 // Array of tasks
 
@@ -22,7 +24,6 @@ int sched_lock;
 // Idle task
 
 static struct task_s task_idle;
-static word_t stack_idle [STACK_SIZE];
 
 static void idle (void)
 	{
@@ -126,22 +127,24 @@ void task_event (struct wait_s * wait)
 	int_back (flags);
 	}
 
-// TODO: allocate stack on heap to minimize BSS section
 
-void task_init_near (int i, struct task_s * t, void * entry, word_t * stack, word_t size)
+void task_init_near (int i, struct task_s * t, void * entry, word_t size)
 	{
 	t->level = 1;
-	t->stack = stack;
+	// FIXME: check returned value
+	t->stack = heap_alloc (size * sizeof (word_t), HEAP_TAG_TASK);
 	t->ssize = size;
-	stack_init_near (t, entry, stack + size);
+	stack_init_near (t, entry, t->stack + size);
 	t->stat = TASK_RUN;
 	if (i >= 0) tasks [i] = t;
 	}
 
-void task_init_far (int i, struct task_s * t, word_t seg, word_t * stack, word_t size)
+
+void task_init_far (int i, struct task_s * t, word_t seg, word_t size)
 	{
 	t->level = 0;
-	t->stack = stack;
+	// FIXME: check returned value
+	t->stack = heap_alloc (size * sizeof (word_t), HEAP_TAG_TASK);
 	t->ssize = size;
 
 #ifdef CONFIG_INT_USER
@@ -149,7 +152,7 @@ void task_init_far (int i, struct task_s * t, word_t seg, word_t * stack, word_t
 #endif // CONFIG_INT_USER
 
 #ifdef CONFIG_INT_KERN
-	stack_init_far (t, 0, seg, 0, seg, stack + size);
+	stack_init_far (t, 0, seg, 0, seg, t->stack + size);
 #endif // CONFIG_INT_KERN
 
 	t->stat = TASK_RUN;
@@ -158,5 +161,5 @@ void task_init_far (int i, struct task_s * t, word_t seg, word_t * stack, word_t
 
 void task_init (void)
 	{
-	task_init_near (-1, &task_idle, idle, stack_idle, STACK_SIZE);
+	task_init_near (-1, &task_idle, idle, STACK_SIZE);
 	}

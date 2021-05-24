@@ -27,11 +27,11 @@ entry:
 	mov    %ax,%sp
 	sti
 
-	// Reset BSS section
-	// as required by GCC-IA16
+	// Reset BSS section as required by GCC-IA16
+	// for zero or uninitialized global variables
 
-	mov    $bss_begin,%di
-	xor    %cx,%cx
+	mov    $_bss_begin,%di
+	mov    $_free_begin,%cx
 	sub    %di,%cx
 	xor    %al,%al
 	cld
@@ -51,16 +51,5 @@ entry:
 
 1:	hlt
 	jmp     1b
-
-//------------------------------------------------------------------------------
-
-	.bss
-
-	// TODO: replace by linker variable
-
-	.global bss_begin
-
-bss_begin:
-	.word 0
 
 //------------------------------------------------------------------------------

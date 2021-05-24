@@ -24,8 +24,8 @@ OBJS= \
 	queue.o \
 	serial.o \
 	system.o \
-	main.o \
 	trace-far.o \
+	main.o \
 	# end of list
 
 EXE2 = stub.bin

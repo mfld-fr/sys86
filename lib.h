@@ -2,4 +2,4 @@
 
 #include "types.h"
 
-void word_to_hex (word_t val, char_t * buf, byte_t * len);
+byte_t word_to_hex (word_t val, char_t * str);

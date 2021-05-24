@@ -3,21 +3,26 @@
 
 static char_t hex [] = "0123456789ABCDEF";
 
-void word_to_hex (word_t val, char_t * str, byte_t * len)
+byte_t word_to_hex (word_t val, char_t * str)
 	{
-	byte_t pos = 3;
-	char_t buf [4];
+	byte_t pos = 0;
+	byte_t f = 0;
+	word_t i;
 
-	while (1) {
-		buf [pos] = hex [val & 0x000F];
-		val >>= 4;
-		if (!val) break;
-		pos--;
+	if ((i = val & 0xF000)) {
+		str [pos++] = hex [i >> 12];
+		f = 1;
 		}
 
-	*len = 4 - pos;
-
-	while (pos < 4) {
-		*(str++) = buf [pos++];
+	if ((i = val & 0x0F00) || f) {
+		str [pos++] = hex [i >> 8];
+		f = 1;
 		}
+
+	if ((i = val & 0x00F0) || f) {
+		str [pos++] = hex [i >> 4];
+		}
+
+	str [pos++] = hex [val & 0x000F];
+	return pos;
 	}

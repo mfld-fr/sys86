@@ -36,7 +36,7 @@ static void trace_dump (void)
 	for (word_t i = 0; i < trace_count; i++)
 		{
 		word_t num = traces [i].num;
-		word_to_hex (num, str, &len);
+		len = word_to_hex (num, str);
 
 		for (int s = 0; s < len; s++)
 			serial_send (str [s]);
@@ -44,7 +44,7 @@ static void trace_dump (void)
 		serial_send (' ');
 
 		word_t msec = traces [i].msec;
-		word_to_hex (msec, str, &len);
+		len = word_to_hex (msec, str);
 
 		for (int s = 0; s < len; s++)
 			serial_send (str [s]);
@@ -52,7 +52,7 @@ static void trace_dump (void)
 		serial_send ('.');
 
 		word_t usec = traces [i].usec / 5;
-		word_to_hex (usec, str, &len);
+		len = word_to_hex (usec, str);
 
 		for (int s = 0; s < len; s++)
 			serial_send (str [s]);

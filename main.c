@@ -133,14 +133,14 @@ static void main_send (void)
 	}
 
 
-extern void * _free_begin;
+extern int _free_begin;  // linker symbol
 
 int main ()
 	{
 	// System initialization
 
 	heap_init ();
-	heap_add (_free_begin, 0xF000);
+	heap_add (&_free_begin, 0xF000);
 
 	vect_init ();    // interrupt vectors
 	int_init ();     // interrupt controller

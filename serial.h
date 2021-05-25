@@ -13,9 +13,8 @@ void serial_proc (void);
 
 // Operations
 
-void serial_send (byte_t c);
-
 byte_t serial_get ();
+void serial_put (byte_t c);
 
 // Initialization
 

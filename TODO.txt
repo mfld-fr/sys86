@@ -2,10 +2,8 @@ Check TODO tag in source.
 
 Otherwise:
 
-- add serial TX interrupt and send task
-- multi-byte queue
+-- multi-byte queue
 - multi-byte serial_send()
-- restore interrupt stack ?
 - monitor as first task ?
 
 First user task: serial echo

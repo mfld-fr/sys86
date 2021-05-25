@@ -115,15 +115,13 @@ int_hand:
 
 	mov     task_cur,%si
 
-	// Increment & check interrupt level
-	// =1: first interrupt
-	// >1: nested interrupt
+	// Check interrupt level
+	// =0: single interrupt
+	// >0: nested interrupt
 
 	mov     int_level,%ax
-	inc     %ax
-	mov     %ax,int_level
-	cmp     $1,%ax
-	jne     1f
+	or      %ax,%ax
+	jnz     1f
 
 	// Save interrupted stack top
 	// Switch to interrupt stack
@@ -131,11 +129,14 @@ int_hand:
 	mov     %sp,task_tsp(%si)
 	mov     %ss,task_tss(%si)
 
-	mov     int_stack,%sp
-	add     $INT_STACK_SIZE,%sp
+	mov     int_stack_top,%sp
 	mov     %dx,%ss
 
-1:	sti
+	// Increment interrupt level
+
+1:	inc     %ax
+	mov     %ax,int_level
+	sti
 
 	// Call interrupt procedure
 	// with interrupt number
@@ -161,7 +162,7 @@ int_hand:
 
 	// Switch back to interrupted stack
 
-	//mov     task_cur,%si
+	//mov     task_cur,%si  // still the same task as on entry
 	mov     task_tsp(%si),%sp
 	mov     task_tss(%si),%ss
 

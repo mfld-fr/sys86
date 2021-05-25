@@ -12,8 +12,6 @@
 
 #define STACK_SIZE 256
 
-#define TASK_MAX 4
-
 // Offsets in task_s structure
 
 #define task_stack 2*0
@@ -58,7 +56,11 @@ struct task_s
 	struct wait_s * wait;  // object waited for
 	};
 
+#define TASK_MAX 5
+
 extern struct task_s * tasks [TASK_MAX];
+
+#define TASK_NUM_SERIAL 3
 
 extern struct task_s * task_prev;
 extern struct task_s * task_cur;

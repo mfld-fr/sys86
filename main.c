@@ -13,12 +13,9 @@
 
 // Test code
 
-static struct task_s task_recv;
-static struct task_s task_send;
+static struct task_s task_loop;
 static struct task_s task_stub;
 
-static struct queue_s queue_0;
-static struct wait_s wait_0;
 
 //------------------------------------------------------------------------------
 
@@ -28,7 +25,7 @@ static struct task_s task_dump;
 
 static void trace_dump (void)
 	{
-	char_t str [4];
+	char_t str [5];
 	byte_t len;
 
 	trace_on = 0;
@@ -39,32 +36,33 @@ static void trace_dump (void)
 		len = word_to_hex (num, str);
 
 		for (int s = 0; s < len; s++)
-			serial_send (str [s]);
+			serial_put (str [s]);
 
-		serial_send (' ');
+		serial_put (' ');
 
 		word_t msec = traces [i].msec;
-		len = word_to_hex (msec, str);
+		len = word_to_dec (msec, str);
 
 		for (int s = 0; s < len; s++)
-			serial_send (str [s]);
+			serial_put (str [s]);
 
-		serial_send ('.');
+		serial_put ('.');
 
 		word_t usec = traces [i].usec / 5;
-		len = word_to_hex (usec, str);
+		len = word_to_dec (usec, str);
 
 		for (int s = 0; s < len; s++)
-			serial_send (str [s]);
+			serial_put (str [s]);
 
-		serial_send (13);
-		serial_send (10);
+		serial_put (13);
+		serial_put (10);
 		}
 
-	serial_send (13);
-	serial_send (10);
+	serial_put (13);
+	serial_put (10);
 
 	trace_count = 0;
+	trace_on = 1;
 	}
 
 static void main_dump (void)
@@ -75,15 +73,9 @@ static void main_dump (void)
 
 		timer_get ();
 
-		// Calibrate trace overhead
-
-		trace_near (0x300);
-		trace_near (0x301);
-
 		// Dump traces
 
 		trace_dump ();
-		trace_on = 1;
 		}
 	}
 
@@ -91,7 +83,7 @@ static void main_dump (void)
 
 //------------------------------------------------------------------------------
 
-static void main_recv (void)
+static void main_loop (void)
 	{
 	while (1)
 		{
@@ -101,32 +93,13 @@ static void main_recv (void)
 		byte_t c = serial_get ();
 		//trace_near (0x100);
 
-		// Put into intertask queue
+		// Write to serial port
+		// Blocking operation
 
-		task_wait (&wait_0, (cond_f) queue_not_full, &queue_0, 1);
-		queue_put (&queue_0, c);
-		task_event (&wait_0);  // not more empty
-		}
-	}
-
-static void main_send (void)
-	{
-	while (1)
-		{
-		// Wait for data in queue
-
-		task_wait (&wait_0, (cond_f) queue_not_empty, &queue_0, 1);
-		byte_t c = queue_get (&queue_0);
-		task_event (&wait_0);  // not more full
+		serial_put (c);
 		//trace_near (0x200);
-
-		// Send to serial port
-
-		serial_send (c);
-		//trace_near (0x250);
 		}
 	}
-
 
 extern int _free_begin;  // linker symbol
 
@@ -138,14 +111,14 @@ int main ()
 	heap_add (&_free_begin, 0x8000);
 
 	int_init ();
+	// FIXME: set vector after device initialization (vect_set)
 	vect_init ();    // interrupt vectors
 	int_dev_init (); // interrupt controller
 	timer_init ();   // timer device
-	serial_init ();  // serial port
 	task_init ();    // task manager
+	serial_init ();  // serial port
 
-	task_init_near (0, &task_send, main_send, STACK_SIZE);
-	task_init_near (1, &task_recv, main_recv, STACK_SIZE);
+	task_init_near (0, &task_loop, main_loop, STACK_SIZE);
 
 #ifdef CONFIG_TRACE
 	task_init_near (2, &task_dump, main_dump, STACK_SIZE);
@@ -153,7 +126,7 @@ int main ()
 
 	// Idle task in user space
 
-	task_init_far (3, &task_stub, 0x2000, STACK_SIZE);
+	task_init_far (4, &task_stub, 0x2000, STACK_SIZE);
 
 	// Switch to first task
 	// Initial stack not needed any more
@@ -163,7 +136,7 @@ int main ()
 	trace_on = 1;
 #endif // CONFIG_TRACE
 
-	task_next = &task_send;
+	task_next = &task_loop;
 	task_switch ();
 	return 0;
 	}

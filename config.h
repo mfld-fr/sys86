@@ -8,5 +8,9 @@
 // Interrupt stack size
 #define INT_STACK_SIZE 256
 
+// Serial I/O queues size
+// Must be 2^N
+#define SERIAL_QUEUE_SIZE 16
+
 // Enable the timed traces
 // #define CONFIG_TRACE

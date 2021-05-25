@@ -14,7 +14,8 @@
 
 int int_level;
 
-byte_t * int_stack;
+byte_t * int_stack_base;
+byte_t * int_stack_top;
 
 // Interrupt procedure
 
@@ -48,5 +49,6 @@ void int_proc (word_t vect)
 
 void int_init (void)
 	{
-	int_stack = heap_alloc (INT_STACK_SIZE, HEAP_TAG_STACK);
+	int_stack_base = heap_alloc (INT_STACK_SIZE, HEAP_TAG_STACK);
+	int_stack_top = int_stack_base + INT_STACK_SIZE;
 	}

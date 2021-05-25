@@ -41,7 +41,7 @@ void task_sched (void)
 	while (1) {
 		// No scheduling if locked
 		// Used by interrupt procedure
-		// to forbid scheduling in nested interrupt
+		// to forbid scheduling during interrupt
 
 		if (sched_lock) break;
 		sched_need = 0;
@@ -130,11 +130,12 @@ void task_event (struct wait_s * wait)
 
 void task_init_near (int i, struct task_s * t, void * entry, word_t size)
 	{
-	t->level = 1;
 	// FIXME: check returned value
-	t->stack = heap_alloc (size * sizeof (word_t), HEAP_TAG_TASK);
+	t->stack = heap_alloc (size * sizeof (word_t), HEAP_TAG_STACK);
 	t->ssize = size;
-	stack_init_near (t, entry, t->stack + size);
+
+	stack_init_near (t, entry, t->stack + t->ssize);
+
 	t->stat = TASK_RUN;
 	if (i >= 0) tasks [i] = t;
 	}
@@ -142,18 +143,12 @@ void task_init_near (int i, struct task_s * t, void * entry, word_t size)
 
 void task_init_far (int i, struct task_s * t, word_t seg, word_t size)
 	{
-	t->level = 0;
 	// FIXME: check returned value
-	t->stack = heap_alloc (size * sizeof (word_t), HEAP_TAG_TASK);
+	t->stack = heap_alloc (size * sizeof (word_t), HEAP_TAG_STACK);
 	t->ssize = size;
 
-#ifdef CONFIG_INT_USER
+	t->inter = 1;
 	stack_init_far (t, 0, seg, 0, seg);
-#endif // CONFIG_INT_USER
-
-#ifdef CONFIG_INT_KERN
-	stack_init_far (t, 0, seg, 0, seg, t->stack + size);
-#endif // CONFIG_INT_KERN
 
 	t->stat = TASK_RUN;
 	if (i >= 0) tasks [i] = t;

@@ -22,6 +22,7 @@ static int timer_test (void * param)
 
 void timer_get ()
 	{
+	// TODO: NULL as condition test for pure event wait
 	task_wait (&timer_wait, timer_test, NULL, 1);
 	}
 

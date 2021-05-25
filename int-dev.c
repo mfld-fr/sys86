@@ -18,7 +18,7 @@ void int_end (word_t vect)
 	outw (IO_INT_EOI, vect);
 	}
 
-void int_init (void)
+void int_dev_init (void)
 	{
 	outw (IO_INT_TIMER,  0x0000); // unmasked - priority 0
 	outw (IO_INT_SERIAL, 0x0001); // unmasked - priority 1

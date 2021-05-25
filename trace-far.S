@@ -21,10 +21,8 @@ trace_far:
 	push    %dx
 	push    %ds
 
-	xor     %ax,%ax
+	mov     $KERNEL_DS,%ax
 	mov     %ax,%ds
-	mov     $VECT_GLOBAL*4+2,%bx
-	mov     (%bx),%ds
 
 	testw   $1,trace_on
 	jz      1f

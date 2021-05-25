@@ -18,9 +18,9 @@ OBJS= \
 	list.o \
 	heap.o \
 	arch.o \
+	int-arch.o \
 	task.o \
 	int-dev.o \
-	int-arch.o \
 	int-proc.o \
 	timer.o \
 	queue.o \

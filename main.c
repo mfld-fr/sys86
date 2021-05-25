@@ -137,8 +137,9 @@ int main ()
 	heap_init ();
 	heap_add (&_free_begin, 0x8000);
 
+	int_init ();
 	vect_init ();    // interrupt vectors
-	int_init ();     // interrupt controller
+	int_dev_init (); // interrupt controller
 	timer_init ();   // timer device
 	serial_init ();  // serial port
 	task_init ();    // task manager

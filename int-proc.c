@@ -6,11 +6,15 @@
 #include "task.h"
 #include "timer.h"
 #include "serial.h"
+#include "heap.h"
+
 
 // Asynchronous interrupt level
 // Used to forbid task switch in nested interrupt
 
 int int_level;
+
+byte_t * int_stack;
 
 // Interrupt procedure
 
@@ -19,9 +23,7 @@ void int_proc (word_t vect)
 	word_t flags;
 
 	flags = int_save ();
-	// No task switch until interrupt stack is empty
-	int_level++;
-	// No scheduling in nested interrupts
+	// No scheduling in interrupts
 	sched_lock++;
 	int_back (flags);
 
@@ -40,6 +42,11 @@ void int_proc (word_t vect)
 	flags = int_save ();
 	sched_lock--;
 	if (sched_need) task_sched ();
-	int_level--;
 	int_back (flags);
+	}
+
+
+void int_init (void)
+	{
+	int_stack = heap_alloc (INT_STACK_SIZE, HEAP_TAG_STACK);
 	}

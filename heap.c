@@ -1,5 +1,6 @@
 // Local heap
 
+#include "config.h"
 // #include "lock.h"
 #include "heap.h"
 
@@ -184,5 +185,5 @@ void heap_iterate (void (* cb) (heap_s *))
 	}
 }
 
-#endif /* HEAP_DEBUG */
+#endif  // HEAP_DEBUG
 

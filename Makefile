@@ -25,7 +25,7 @@ OBJS= \
 	timer.o \
 	queue.o \
 	serial.o \
-	system.o \
+	board.o \
 	trace-far.o \
 	main.o \
 	# end of list

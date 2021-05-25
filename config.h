@@ -14,3 +14,6 @@
 
 // Enable the timed traces
 // #define CONFIG_TRACE
+
+// Enable the heap dump
+// #define HEAP_DEBUG

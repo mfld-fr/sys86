@@ -2,7 +2,7 @@ Check TODO tag in source.
 
 Otherwise:
 
--- multi-byte queue
+- multi-byte queue
 - multi-byte serial_send()
 - monitor as first task ?
 

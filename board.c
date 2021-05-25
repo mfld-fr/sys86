@@ -1,9 +1,9 @@
 // SYS86 project
-// Advantech SNMP-1000 system
+// Advantech SNMP-1000 board
 
 #include "arch.h"
 #include "io-dev.h"
-#include "system.h"
+#include "board.h"
 
 // Quiet the external watchdog chip
 // every second to avoid system reset
@@ -19,11 +19,3 @@ void led_blink (void)
 	{
 	outw (IO_PORT1_DATA, inw (IO_PORT1_DATA) ^ IO_PORT1_LED1);
 	}
-
-// TODO: complete system initialization
-
-/*
-void system_init (void)
-	{
-	}
-*/

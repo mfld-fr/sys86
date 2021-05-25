@@ -4,12 +4,11 @@
 #include "types.h"
 #include "arch.h"
 #include "timer.h"
-#include "system.h"
+
+#include "board.h"
 #include "task.h"
 
 //------------------------------------------------------------------------------
-
-#ifdef CONFIG_TRACE
 
 static struct wait_s timer_wait;
 
@@ -25,6 +24,10 @@ void timer_get ()
 	// TODO: NULL as condition test for pure event wait
 	task_wait (&timer_wait, timer_test, NULL, 1);
 	}
+
+//------------------------------------------------------------------------------
+
+#ifdef CONFIG_TRACE
 
 // Time sampling
 
@@ -53,9 +56,7 @@ void timer0_proc (void)
 	watchdog ();
 	led_blink ();
 
-#ifdef CONFIG_TRACE
 	task_event (&timer_wait);
-#endif // CONFIG_TRACE
 	}
 
 // Timer initialization

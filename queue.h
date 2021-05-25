@@ -5,6 +5,7 @@
 
 #include "types.h"
 
+
 // Queue size has to be power of 2
 // for easy calculation of R/W indexes
 
@@ -18,7 +19,7 @@ struct _queue_s
 
 typedef struct _queue_s queue_s;
 
-// TODO: allocate queue buffer on heap
+
 void queue_init (queue_s * q, word_t size);
 
 int queue_not_empty (queue_s * q);

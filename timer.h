@@ -25,6 +25,7 @@
 
 void timer0_proc (void);
 void timer_init (void);
+void timer_get (void);
 
 #ifdef CONFIG_TRACE
 
@@ -41,8 +42,6 @@ extern word_t trace_on;
 
 void trace_near (word_t num);
 void trace_far (word_t num);
-
-void timer_get (void);
 
 #endif // CONFIG_TRACE
 

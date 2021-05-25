@@ -1,5 +1,5 @@
 // SYS86 project
-// Advantech SNMP-1000 system
+// Advantech SNMP-1000 board
 
 #pragma once
 
@@ -7,7 +7,7 @@
 
 #define IO_PRINT_COM    0x031A
 
-// R8810 I/O ports
+// GPIO ports
 
 #define IO_PORT0_MASK   0xFE33
 #define IO_PORT0_WATCH  0x0001
@@ -21,6 +21,5 @@
 
 void watchdog (void);
 void led_blink (void);
-void system_init (void);
 
 #endif // !_ASSEMBLY

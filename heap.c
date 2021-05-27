@@ -1,8 +1,9 @@
+// SYS86 project
 // Local heap
 
-#include "config.h"
 // #include "lock.h"
 #include "heap.h"
+
 
 // Minimal block size to hold heap header
 // plus enough space in body to be useful

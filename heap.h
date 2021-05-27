@@ -1,11 +1,12 @@
+// SYS86 project
 // Local heap
 
 #pragma once
 
+#include "config.h"
 #include "types.h"
 #include "list.h"
 
-/*#define HEAP_DEBUG*/
 
 // Heap block header
 
@@ -16,7 +17,6 @@
 #define HEAP_TAG_STACK   0x01
 #define HEAP_TAG_QUEUE   0x02
 
-
 // TODO: move free list node from header to body
 // to reduce overhead for allocated block
 
@@ -25,7 +25,6 @@ struct _heap_s {
 	list_s free;
 	word_t size;
 	byte_t tag;
-	byte_t unused;  // padding
 } __attribute__ ((packed));
 
 typedef struct _heap_s heap_s;

@@ -12,37 +12,29 @@
 
 //------------------------------------------------------------------------------
 
-	.global vect_init
+// void vect_set (byte_t vect, void * hand);
 
-vect_init:
+	.global vect_set
 
-	push    %es
+vect_set:
+
+	mov     %sp,%bx
+	mov     4(%bx),%cx
+	mov     2(%bx),%bx
+
+	xor     %bh,%bh
+	shl     $2,%bx
+
+	mov     %ds,%dx
 	xor     %ax,%ax
-	mov     %ax,%es
+	mov     %ax,%ds
 
 	cli
-
-	// Timer vector
-
-	mov     $4*VECT_TIMER0,%bx
-	movw    $int_timer0,%es:(%bx)
-	mov     %cs,%es:2(%bx)
-
-	// Serial vector
-
-	mov     $4*VECT_SERIAL,%bx
-	movw    $int_serial,%es:(%bx)
-	mov     %cs,%es:2(%bx)
-
+	mov     %cx,0(%bx)
+	mov     %cs,2(%bx)
 	sti
 
-	// System vector
-
-	mov     $4*VECT_SYSTEM,%bx
-	movw    $int_sys,%es:(%bx)
-	mov     %cs,%es:2(%bx)
-
-	pop     %es
+	mov     %dx,%ds
 	ret
 
 //------------------------------------------------------------------------------
@@ -278,9 +270,9 @@ switch_ret:
 
 // Synchronous interrupt (system call)
 
-	.global int_sys
+	.global int_system
 
-int_sys:
+int_system:
 
 	push    %ds
 	push    %si
@@ -425,15 +417,6 @@ stack_init_near:
 	pop     %bp
 	ret
 
-//------------------------------------------------------------------------------
-/*
-	.global int_enable
-
-int_enable:
-
-	sti
-	ret
-*/
 //------------------------------------------------------------------------------
 
 	.global int_save

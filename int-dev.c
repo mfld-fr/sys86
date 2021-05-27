@@ -11,15 +11,28 @@
 #define IO_INT_TIMER  0xFF32
 #define IO_INT_SERIAL 0xFF44
 
-void int_end (word_t vect)
-	{
-	// Specific EOI with interrupt vector
 
-	outw (IO_INT_EOI, vect);
+// Specific EOI with interrupt vector
+
+void int_end (byte_t vect)
+	{
+	outw (IO_INT_EOI, (word_t) vect);
 	}
 
-void int_dev_init (void)
+
+// Unmask and set priority
+
+void int_enable (byte_t vect)
 	{
-	outw (IO_INT_TIMER,  0x0000); // unmasked - priority 0
-	outw (IO_INT_SERIAL, 0x0001); // unmasked - priority 1
+	switch (vect)
+		{
+		case VECT_TIMER0:
+			outw (IO_INT_TIMER,  0x0000); // unmasked - priority 0
+			break;
+
+		case VECT_SERIAL:
+			outw (IO_INT_SERIAL, 0x0001); // unmasked - priority 1
+			break;
+
+		}
 	}

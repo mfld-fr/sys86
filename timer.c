@@ -1,12 +1,12 @@
-// EMU86 project
+// SYS86 project
 // R8810 timers
 
 #include "types.h"
 #include "arch.h"
-#include "timer.h"
-
-#include "board.h"
+#include "int.h"
 #include "task.h"
+#include "timer.h"
+#include "board.h"
 
 //------------------------------------------------------------------------------
 
@@ -14,15 +14,11 @@ static struct wait_s timer_wait;
 
 // Wait timer
 
-static int timer_test (void * param)
-	{
-	return 0;
-	}
-
 void timer_get ()
 	{
-	// TODO: NULL as condition test for pure event wait
-	task_wait (&timer_wait, timer_test, NULL, 1);
+	// NULL as condition test for pure event wait
+
+	task_wait (&timer_wait, NULL, NULL, 1);
 	}
 
 //------------------------------------------------------------------------------
@@ -63,15 +59,18 @@ void timer0_proc (void)
 
 void timer_init (void)
 	{
-	// Disable T1 timer
+	// Disable all timers
 
+	outw (IO_TIMER0_MODE, 0x4000);
 	outw (IO_TIMER1_MODE, 0x4000);
+	outw (IO_TIMER2_MODE, 0x4000);
+
+	// Interrupt setup
+
+	int_set_timer ();
 
 	// T0 timer @ 1 Hz
 	// T2 timer @ 1 KHz
-
-	outw (IO_TIMER2_MODE, 0x4000);
-	outw (IO_TIMER0_MODE, 0x4000);
 
 	outw (IO_TIMER2_COUNT, 0);
 	outw (IO_TIMER0_COUNT, 0);

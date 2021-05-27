@@ -1,11 +1,13 @@
 // SYS86 project
 // R8810 serial port
 
+#include "types.h"
+#include "arch.h"
+#include "int.h"
 #include "task.h"
 #include "queue.h"
 #include "serial.h"
-#include "arch.h"
-#include "timer.h"
+
 
 // R8810 serial port I/O
 
@@ -96,6 +98,10 @@ void serial_init (void)
 
 	queue_init (&serial_qin,  SERIAL_QUEUE_SIZE);
 	queue_init (&serial_qout, SERIAL_QUEUE_SIZE);
+
+	// Interrupt setup
+
+	int_set_serial ();
 
 	// Enable serial receive & transmit interrupts
 

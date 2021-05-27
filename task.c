@@ -1,4 +1,4 @@
-// EMU86 project
+// SYS86 project
 // Task management
 
 #include "types.h"
@@ -88,7 +88,7 @@ void task_wait (struct wait_s * wait, cond_f test, void * param, int single)
 		// Atomic condition test & prepare to sleep
 
 		flag = int_save ();
-		if (test (param)) break;
+		if (test && test (param)) break;
 		task_cur->wait = wait;
 		wait->t = task_cur;
 		task_cur->stat = TASK_WAIT;

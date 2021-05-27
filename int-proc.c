@@ -19,7 +19,7 @@ byte_t * int_stack_top;
 
 // Interrupt procedure
 
-void int_proc (word_t vect)
+void int_proc (byte_t vect)
 	{
 	word_t flags;
 
@@ -51,4 +51,19 @@ void int_init (void)
 	{
 	int_stack_base = heap_alloc (INT_STACK_SIZE, HEAP_TAG_STACK);
 	int_stack_top = int_stack_base + INT_STACK_SIZE;
+
+	vect_set (VECT_SYSTEM, int_system);
+	}
+
+
+void int_set_timer (void)
+	{
+	vect_set (VECT_TIMER0, int_timer0);
+	int_enable (VECT_TIMER0);
+	}
+
+void int_set_serial (void)
+	{
+	vect_set (VECT_SERIAL, int_serial);
+	int_enable (VECT_SERIAL);
 	}

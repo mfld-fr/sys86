@@ -8,7 +8,6 @@
 
 // Hardware interrupt vectors
 // R8810 specific
-// TODO: move to int-dev.h
 
 #define VECT_TIMER0 0x08
 #define VECT_SERIAL 0x14
@@ -16,7 +15,6 @@
 // System call vector
 
 #define VECT_SYSTEM 0x80
-
 
 // Stack frame after interrupt entry
 // Same offsets as in reg_s structure
@@ -59,16 +57,29 @@ struct regs_s {
 
 extern int int_level;
 
-void vect_init ();
+// From assembly
 
-void int_proc (word_t vect);
-void int_end (word_t vect);
+void vect_set (byte_t vect, void * hand);
 
-//void int_enable (void);
+void int_timer0 (void);
+void int_serial (void);
+void int_system (void);
+
 word_t int_save (void);
 void int_back (word_t saved);
 
-void int_dev_init (void);
+// Interrupt controller
+
+void int_end (byte_t vect);
+void int_enable (byte_t vect);
+
+// Interrupt management
+
+void int_proc (byte_t vect);
+
 void int_init (void);
+
+void int_set_timer (void);
+void int_set_serial (void);
 
 #endif  // !_ASSEMBLY

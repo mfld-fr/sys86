@@ -154,18 +154,15 @@ int main ()
 	heap_add (&_free_begin, 0x8000);
 
 	int_init ();
-	// FIXME: set vector after device initialization (vect_set)
-	vect_init ();    // interrupt vectors
-	int_dev_init (); // interrupt controller
-	timer_init ();   // timer device
-	task_init ();    // task manager
-	serial_init ();  // serial port
+	task_init ();
+	timer_init ();
+	serial_init ();
 
 	task_init_near (0, &task_loop, main_loop, STACK_SIZE);
 
 	task_init_near (2, &task_dump, main_dump, STACK_SIZE);
 
-	// Idle task in user space
+	// TEST: idle task in user space
 
 	task_init_far (4, &task_stub, 0x2000, STACK_SIZE);
 

@@ -23,10 +23,10 @@ void int_proc (byte_t vect)
 	{
 	word_t flags;
 
-	flags = int_save ();
+	int_save (flags);
 	// No scheduling in interrupts
 	sched_lock++;
-	int_back (flags);
+	int_restore (flags);
 
 	switch (vect) {
 		case VECT_TIMER0:
@@ -40,10 +40,10 @@ void int_proc (byte_t vect)
 
 	int_end (vect);
 
-	flags = int_save ();
+	int_save (flags);
 	sched_lock--;
 	if (sched_need) task_sched ();
-	int_back (flags);
+	int_restore (flags);
 	}
 
 

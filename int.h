@@ -57,6 +57,16 @@ struct regs_s {
 
 extern int int_level;
 
+// Fast flags save & restore
+
+#define int_save(x) \
+asm volatile ("pushfw\npopw %0\ncli\n" \
+	:"=r" (x):/* no input */:"memory")
+
+#define int_restore(x) \
+asm volatile ("pushw %0\npopfw\n" \
+	:/* no output */:"r" (x):"memory")
+
 // From assembly
 
 void vect_set (byte_t vect, void * hand);
@@ -64,9 +74,6 @@ void vect_set (byte_t vect, void * hand);
 void int_timer0 (void);
 void int_serial (void);
 void int_system (void);
-
-word_t int_save (void);
-void int_back (word_t saved);
 
 // Interrupt controller
 

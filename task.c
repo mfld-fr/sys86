@@ -36,7 +36,8 @@ static void idle (void)
 
 void task_sched (void)
 	{
-	word_t flags = int_save ();
+	word_t flags;
+	int_save (flags);
 
 	while (1) {
 		// No scheduling if locked
@@ -75,24 +76,24 @@ void task_sched (void)
 		break;
 		}
 
-	int_back (flags);
+	int_restore (flags);
 	}
 
 // Wait for event occurrence
 
 void task_wait (struct wait_s * wait, cond_f test, void * param, int single)
 	{
-	word_t flag;
+	word_t flags;
 
 	while (1) {
 		// Atomic condition test & prepare to sleep
 
-		flag = int_save ();
+		int_save (flags);
 		if (test && test (param)) break;
 		task_cur->wait = wait;
 		wait->t = task_cur;
 		task_cur->stat = TASK_WAIT;
-		int_back (flag);
+		int_restore (flags);
 
 		// Interrupt enabled for a short time
 		// to give a latest chance before sleeping
@@ -104,7 +105,7 @@ void task_wait (struct wait_s * wait, cond_f test, void * param, int single)
 		if (single) return;
 		}
 
-	int_back (flag);
+	int_restore (flags);
 	}
 
 // Wake up task on event occurrence
@@ -113,18 +114,19 @@ void task_wait (struct wait_s * wait, cond_f test, void * param, int single)
 
 void task_event (struct wait_s * wait)
 	{
-	word_t flags = int_save ();
+	word_t flags;
+	int_save (flags);
 
 	if (wait->t) {
 		wait->t->wait = NULL;
 		wait->t->stat = TASK_RUN;
 		wait->t = NULL;
+
 		sched_need++;
+		task_sched ();
 		}
 
-	if (sched_need) task_sched ();
-
-	int_back (flags);
+	int_restore (flags);
 	}
 
 

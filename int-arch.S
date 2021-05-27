@@ -418,37 +418,3 @@ stack_init_near:
 	ret
 
 //------------------------------------------------------------------------------
-
-	.global int_save
-
-// Save interrupt enabled flag then disable it
-
-int_save:
-
-	pushf
-	pop     %ax
-	and     $0x0200,%ax
-	cli
-	ret
-
-//------------------------------------------------------------------------------
-
-	.global int_back
-
-// Back to saved interrupt enable flag
-
-// arg1: flag
-
-int_back:
-
-	mov     %sp,%bx
-	mov     2(%bx),%ax  // arg1
-	pushf
-	pop     %dx
-	and     $0xFEFF,%dx
-	or      %ax,%dx
-	push    %dx
-	popf
-	ret
-
-//------------------------------------------------------------------------------

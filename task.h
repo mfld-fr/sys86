@@ -66,9 +66,6 @@ extern struct task_s * task_prev;
 extern struct task_s * task_cur;
 extern struct task_s * task_next;
 
-extern int sched_lock;
-extern int sched_need;
-
 // From assembly
 
 void stack_init_near (struct task_s *, void * entry, word_t * stack);
@@ -80,6 +77,9 @@ void task_switch (void);
 
 void task_init_near (int i, struct task_s * t, void * entry, word_t size);
 void task_init_far (int i, struct task_s * t, word_t seg, word_t size);
+
+void task_lock (void);
+void task_unlock (void);
 
 void task_sched (void);
 

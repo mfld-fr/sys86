@@ -9,26 +9,28 @@
 #include "heap.h"
 
 
-// Asynchronous interrupt level
-// Used to forbid task switch in nested interrupt
+// Asynchronous interrupt nesting level
 
 int int_level;
 
+// Asynchronous interrupt stack
+// Allow smaller task stacks
+
 byte_t * int_stack_base;
 byte_t * int_stack_top;
+
 
 // Interrupt procedure
 
 void int_proc (byte_t vect)
 	{
-	word_t flags;
+	// No scheduling in interrupt
+	// if any task event occurs
 
-	int_save (flags);
-	// No scheduling in interrupts
-	sched_lock++;
-	int_restore (flags);
+	task_lock ();
 
-	switch (vect) {
+	switch (vect)
+		{
 		case VECT_TIMER0:
 		timer0_proc ();
 		break;
@@ -40,10 +42,7 @@ void int_proc (byte_t vect)
 
 	int_end (vect);
 
-	int_save (flags);
-	sched_lock--;
-	if (sched_need) task_sched ();
-	int_restore (flags);
+	task_unlock ();
 	}
 
 

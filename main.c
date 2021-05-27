@@ -146,7 +146,7 @@ static void main_loop (void)
 
 extern int _free_begin;  // linker symbol
 
-int main ()
+void main (void)
 	{
 	// System initialization
 
@@ -166,15 +166,15 @@ int main ()
 
 	task_init_far (4, &task_stub, 0x2000, STACK_SIZE);
 
-	// Switch to first task
+	// Switch to root task
 	// Initial stack not needed any more
-	// Interrupt enabled by default in task
 
 #ifdef CONFIG_TRACE
 	trace_on = 1;
 #endif // CONFIG_TRACE
 
+	word_t flags;
+	int_save (flags);
 	task_next = &task_loop;
 	task_switch ();
-	return 0;
 	}

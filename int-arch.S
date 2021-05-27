@@ -71,7 +71,7 @@ int_serial:
 
 //------------------------------------------------------------------------------
 
-// Asynchronous interrupt (HW IRQ or trap)
+// Asynchronous interrupt (HW IRQ or CPU trap)
 
 int_hand:
 

@@ -28,12 +28,12 @@
 
 struct task_s;
 
-// Wait structure
+// Wait event structure
 // Very simplified wait queue :-)
 
 struct wait_s
 	{
-	struct task_s * t;
+	struct task_s * t;  // task to wake up
 	};
 
 // Task structure
@@ -53,7 +53,6 @@ struct task_s
 	// C only
 
 	int stat;
-	struct wait_s * wait;  // object waited for
 	};
 
 #define TASK_MAX 5
@@ -63,7 +62,7 @@ extern struct task_s * tasks [TASK_MAX];
 #define TASK_NUM_SERIAL 3
 
 extern struct task_s * task_prev;
-extern struct task_s * task_cur;
+extern struct task_s * task_now;
 extern struct task_s * task_next;
 
 // From assembly

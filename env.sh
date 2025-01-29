@@ -6,7 +6,7 @@
 
 if [[ ! -f "env.sh" ]]; then
 	echo "error: source this script from the project top directory";
-	return 1;
+	exit 1;
 fi
 
 export TOPDIR="$(pwd)"
@@ -17,7 +17,7 @@ echo TOPDIR set to $TOPDIR
 
 if [[ ! -d "$TOPDIR/cross" ]]; then
 	echo "error: missing folder for the cross build tools";
-	return 1;
+	exit 1;
 fi
 
 export CROSSDIR="$TOPDIR/cross"	

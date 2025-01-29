@@ -13,7 +13,7 @@
 struct task_s * tasks [TASK_MAX];
 
 struct task_s * task_prev;
-struct task_s * task_cur;
+struct task_s * task_now;
 struct task_s * task_next;
 
 static int sched_lock;
@@ -91,9 +91,9 @@ void task_sched (void)
 
 		if (!n) n = &task_idle;
 
-		if (n != task_cur)
+		if (n != task_now)
 			{
-			task_prev = task_cur;
+			task_prev = task_now;
 			task_next = n;
 
 			// No task switch during interrupt
@@ -109,7 +109,7 @@ void task_sched (void)
 
 //------------------------------------------------------------------------------
 
-// Wait for event occurrence
+// Wait for event occurrence and optional condition
 
 void task_wait (struct wait_s * wait, cond_f test, void * param, int single)
 	{
@@ -126,9 +126,8 @@ void task_wait (struct wait_s * wait, cond_f test, void * param, int single)
 			break;
 			}
 
-		task_cur->wait = wait;
-		wait->t = task_cur;
-		task_cur->stat = TASK_WAIT;
+		wait->t = task_now;
+		task_now->stat = TASK_WAIT;
 		int_restore (flags);
 
 		// Interrupt enabled for a short time
@@ -147,18 +146,17 @@ void task_wait (struct wait_s * wait, cond_f test, void * param, int single)
 
 // May wake up one task on event occurrence
 
-// TODO: no need to reschedule
-// if waking up a lower priority than current
-
 void task_event (struct wait_s * wait)
 	{
 	word_t flags;
 	int_save (flags);
 
-	if (wait->t) {
-		wait->t->wait = NULL;
-		wait->t->stat = TASK_RUN;
+	if (wait->t)
+		{
+		struct task_s * t = wait->t;
 		wait->t = NULL;
+
+		t->stat = TASK_RUN;
 
 		task_sched ();
 		}

@@ -105,7 +105,7 @@ int_hand:
 
 	// Get current task
 
-	mov     task_cur,%si
+	mov     task_now,%si
 
 	// Check interrupt level
 	// =0: single interrupt
@@ -154,7 +154,7 @@ int_hand:
 
 	// Switch back to interrupted stack
 
-	//mov     task_cur,%si  // still the same task as on entry
+	//mov     task_now,%si  // still the same task as on entry
 	mov     task_tsp(%si),%sp
 	mov     task_tss(%si),%ss
 
@@ -192,7 +192,7 @@ stack_switch:
 	mov     task_int(%bx),%di
 
 	mov     %bx,%si
-	mov     %si,task_cur
+	mov     %si,task_now
 
 	xor     %bx,%bx
 	mov     %bx,task_next
@@ -285,7 +285,7 @@ int_system:
 
 	// Get current task
 
-	mov     task_cur,%si
+	mov     task_now,%si
 
 	// Save user stack top
 	// Switch to kernel stack
